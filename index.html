@@ -1745,7 +1745,7 @@ _0x3a45.focus();
         var res=await fetch(API+'/signup',{
           method:'POST',
           headers:{'Content-Type':'application/json'},
-          body:JSON.stringify({surname:sur,otherNames:oth,email:eml,phone:ph})
+            body:JSON.stringify({surname:sur,otherNames:oth,email:eml,phone:ph})
         });
         var data=await res.json();
         if(!res.ok) throw new Error(data.error||'Signup failed.');
@@ -1771,6 +1771,7 @@ _0x3a45.focus();
     if(!token) return;
 
     // Show set-password card immediately
+    // Show set-password card first, then verify token and enable submit only if valid
     showCard('setpwd-card');
     var errEl=document.getElementById('setpwd-err');
     var btn=document.getElementById('setpwd-btn');
@@ -1796,64 +1797,7 @@ _0x3a45.focus();
       var errEl=document.getElementById('setpwd-err');
       var okEl=document.getElementById('setpwd-success');
       errEl.style.display='none'; okEl.style.display='none';
-
-      var pwd=document.getElementById('sp-password').value;
-      var cpwd=document.getElementById('sp-confirm').value;
-      var tok=document.getElementById('setpwd-card').dataset.confirmToken;
-
-      if(!tok){
-        errEl.textContent='⚠ Invalid session. Please use your confirmation email link.';
-        errEl.style.display='block'; return;
-      }
-      if(pwd.length<8){
-        errEl.textContent='⚠ Password must be at least 8 characters.';
-        errEl.style.display='block'; return;
-      }
-      if(pwd!==cpwd){
-        errEl.textContent='⚠ Passwords do not match. Please try again.';
-        errEl.style.display='block'; return;
-      }
-
-      setpwdBtn.classList.add('loading'); setpwdBtn.disabled=true;
-      try{
-        var res=await fetch(API+'/set-password',{
-          method:'POST',
-          headers:{'Content-Type':'application/json'},
-          body:JSON.stringify({token:tok,password:pwd})
-        });
-        var data=await res.json();
-        if(!res.ok) throw new Error(data.error||'Failed to set password.');
-        okEl.textContent='✓ '+data.message+' Redirecting to login...';
-        okEl.style.display='block';
-        setpwdBtn.style.display='none';
-        setTimeout(function(){
-          window.history.replaceState({},'',window.location.pathname);
-          document.getElementById('sp-password').value='';
-          document.getElementById('sp-confirm').value='';
-          showCard('login-card');
-          document.getElementById('usr').focus();
-        },2500);
-      }catch(e){
-        errEl.textContent='⚠ '+e.message;
-        errEl.style.display='block';
-        setpwdBtn.classList.remove('loading'); setpwdBtn.disabled=false;
-      }
-    });
-  }
-
-})();
-
-// FORGOT PASSWORD FLOW
-(function(){
-  var API='https://eis-recbackend.onrender.com/api/auth';
-  var ALL_CARDS=['login-card','signup-card','setpwd-card','forgot-card','resetpwd-card'];
-
-  function showCard(id){
-    ALL_CARDS.forEach(function(c){
-      var el=document.getElementById(c);
-      if(el) el.style.display=(c===id?'block':'none');
-    });
-  }
+@@ -1857,55 +1857,55 @@ _0x3a45.focus();
 
   var showForgot=document.getElementById('show-forgot');
   if(showForgot){
@@ -1880,10 +1824,12 @@ _0x3a45.focus();
         var data=await res.json();
         if(!res.ok) throw new Error(data.error||'Request failed.');
         okEl.textContent='checkmark '+data.message;
+        okEl.textContent='✓ '+data.message;
         okEl.style.display='block';
         document.getElementById('fp-email').value='';
       }catch(e){
         errEl.textContent='warning '+e.message;
+        errEl.textContent='⚠ '+e.message;
         errEl.style.display='block';
       }finally{
         forgotBtn.classList.remove('loading'); forgotBtn.disabled=false;
@@ -1909,9 +1855,7 @@ _0x3a45.focus();
     }
   })();
 
-  var resetBtn=document.getElementById('resetpwd-btn');
-  if(resetBtn){
-    resetBtn.addEventListener('click',async function(){
+@@ -1915,92 +1915,105 @@ _0x3a45.focus();
       var errEl=document.getElementById('resetpwd-err');
       var okEl=document.getElementById('resetpwd-success');
       errEl.style.display='none'; okEl.style.display='none';
@@ -1938,6 +1882,7 @@ _0x3a45.focus();
         },2500);
       }catch(e){
         errEl.textContent=e.message; errEl.style.display='block';
+        if(errEl){errEl.textContent=e.message;errEl.style.display='block';}
         resetBtn.classList.remove('loading'); resetBtn.disabled=false;
       }
     });
@@ -1948,17 +1893,36 @@ _0x3a45.focus();
 (function(){
   var API='https://eis-recbackend.onrender.com/api/auth';
   var modal=document.getElementById('contact-admin-modal');
+  // Guard against partial-page renders where the modal markup is absent.
+  if(!modal) return;
 
   function openModal(){modal.style.display='flex';document.getElementById('ca-username').focus();}
+  function openModal(){
+    var username=document.getElementById('ca-username');
+    modal.style.display='flex';
+    if(username) username.focus();
+  }
   function closeModal(){
     modal.style.display='none';
     ['ca-username','ca-email','ca-message'].forEach(function(id){document.getElementById(id).value='';});
     document.getElementById('contact-admin-err').style.display='none';
     document.getElementById('contact-admin-ok').style.display='none';
+    ['ca-username','ca-email','ca-message'].forEach(function(id){
+      var field=document.getElementById(id);
+      if(field) field.value='';
+    });
+    var err=document.getElementById('contact-admin-err');
+    var ok=document.getElementById('contact-admin-ok');
+    if(err) err.style.display='none';
+    if(ok) ok.style.display='none';
     var btn=document.getElementById('ca-send-btn');
     btn.querySelector('.btn-text').style.display='';
+    if(!btn) return;
+    var bt=btn.querySelector('.btn-text');
     var bl=btn.querySelector('.btn-loading');
     bl.style.display='none';
+    if(bt) bt.style.display='';
+    if(bl) bl.style.display='none';
     btn.disabled=false;
   }
 
@@ -1976,12 +1940,16 @@ _0x3a45.focus();
       var errEl=document.getElementById('contact-admin-err');
       var okEl=document.getElementById('contact-admin-ok');
       errEl.style.display='none'; okEl.style.display='none';
+      if(errEl) errEl.style.display='none';
+      if(okEl) okEl.style.display='none';
       var uname=document.getElementById('ca-username').value.trim();
       var email=document.getElementById('ca-email').value.trim();
       var msg=document.getElementById('ca-message').value.trim();
       if(!uname||!email||!msg){errEl.textContent='Please fill in all fields.';errEl.style.display='block';return;}
+      if(!uname||!email||!msg){if(errEl){errEl.textContent='Please fill in all fields.';errEl.style.display='block';}return;}
       var emailRe=/^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if(!emailRe.test(email)){errEl.textContent='Please enter a valid email address.';errEl.style.display='block';return;}
+      if(!emailRe.test(email)){if(errEl){errEl.textContent='Please enter a valid email address.';errEl.style.display='block';}return;}
       sendBtn.querySelector('.btn-text').style.display='none';
       var bl=sendBtn.querySelector('.btn-loading');
       bl.style.display='flex';
@@ -1992,10 +1960,12 @@ _0x3a45.focus();
         if(!res.ok) throw new Error(data.error||'Send failed.');
         okEl.textContent=data.message;
         okEl.style.display='block';
+        if(okEl){okEl.textContent=data.message;okEl.style.display='block';}
         ['ca-username','ca-email','ca-message'].forEach(function(id){document.getElementById(id).value='';});
         setTimeout(closeModal,3000);
       }catch(e){
         errEl.textContent=e.message; errEl.style.display='block';
+        if(errEl){errEl.textContent=e.message;errEl.style.display='block';}
         sendBtn.querySelector('.btn-text').style.display='';
         bl.style.display='none';
         sendBtn.disabled=false;
