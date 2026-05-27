@@ -1694,7 +1694,10 @@ document.getElementById('yr').textContent=new Date().getFullYear();
 _0x3a45.focus();
 
 // ── BACKEND WAKE-UP PING ───────────────────────────────────
-(function(){fetch('https://eis-recbackend.onrender.com/'),{method:'GET',headers:{'Content-Type':'application/json'}}).catch(function(){});})();
+(function(){
+  fetch('https://eis-recbackend.onrender.com/')
+    .catch(function(){});
+})();
 
 // ── SIGNUP / CONFIRM / SET-PASSWORD FLOW ──────────────────
 (function(){
