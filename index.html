@@ -1,0 +1,2006 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Elites BankRecon App— Secure Login</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Syne:wght@500;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+<style>
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --n:#0a1628;--n2:#0f1f3d;--n3:#162747;--n4:#1c3057;
+  --t:#00c9a7;--t2:#00a98e;--t3:#009980;
+  --td:rgba(0,201,167,.13);--tg:rgba(0,201,167,.06);
+  --am:#f5a623;--rd:#e05252;--gr:#22c55e;
+  --tx:#e8edf5;--tx2:#8fa3bf;--tx3:#4a6080;
+  --b:rgba(255,255,255,.07);--b2:rgba(255,255,255,.13);
+  --sf:rgba(255,255,255,.04);--sf2:rgba(255,255,255,.08);
+  --r:10px;--rl:16px;
+  --mo:'IBM Plex Mono',monospace;
+  --sa:'DM Sans',sans-serif;
+  --di:'Syne',sans-serif;
+  --sh:0 1px 3px rgba(0,0,0,.4),0 4px 16px rgba(0,0,0,.3);
+  --sh2:0 4px 24px rgba(0,0,0,.5),0 12px 48px rgba(0,0,0,.3);
+}
+html{font-size:15px}
+body{font-family:var(--sa);background:var(--n);color:var(--tx);min-height:100vh;line-height:1.6}
+
+#login-page{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  min-height:100vh;padding:2rem;
+  background:var(--n);
+  position:relative;overflow:hidden;
+}
+#login-page::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 60% 50% at 50% 0%,rgba(0,201,167,.08) 0%,transparent 70%),
+              radial-gradient(ellipse 40% 40% at 80% 80%,rgba(0,201,167,.05) 0%,transparent 60%);
+  pointer-events:none;
+}
+#login-page::after{
+  content:'';position:absolute;inset:0;
+  background-image:repeating-linear-gradient(0deg,transparent,transparent 39px,rgba(255,255,255,.02) 39px,rgba(255,255,255,.02) 40px),
+                   repeating-linear-gradient(90deg,transparent,transparent 39px,rgba(255,255,255,.02) 39px,rgba(255,255,255,.02) 40px);
+  pointer-events:none;
+}
+.login-card{
+  background:var(--n2);
+  border:1px solid var(--b2);
+  border-radius:20px;
+  padding:2.75rem 2.5rem 2.25rem;
+  width:100%;max-width:420px;
+  box-shadow:var(--sh2);
+  position:relative;z-index:1;
+}
+.login-brand{display:flex;align-items:center;gap:14px;margin-bottom:2rem;}
+.login-mark{
+  width:48px;height:48px;background:var(--t);border-radius:12px;
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--di);font-size:13px;font-weight:700;color:var(--n);
+  letter-spacing:-.5px;flex-shrink:0;box-shadow:0 0 20px rgba(0,201,167,.3);
+}
+.login-brand-name{font-family:var(--di);font-size:20px;font-weight:700;letter-spacing:-.03em;color:var(--tx);}
+.login-brand-name span{color:var(--t)}
+.login-title{font-family:var(--di);font-size:22px;font-weight:700;letter-spacing:-.03em;margin-bottom:6px;}
+.login-sub{font-size:13px;color:var(--tx2);margin-bottom:2rem;}
+.login-field{margin-bottom:1.1rem}
+.login-field label{display:block;font-size:11px;font-family:var(--mo);color:var(--tx2);margin-bottom:7px;letter-spacing:.06em;text-transform:uppercase;}
+.login-input-wrap{position:relative}
+.login-input{
+  width:100%;padding:12px 16px;
+  background:var(--n3);border:1px solid var(--b2);border-radius:var(--r);
+  color:var(--tx);font-family:var(--sa);font-size:14px;
+  transition:border-color .2s,box-shadow .2s;outline:none;
+}
+.login-input:focus{border-color:var(--t);box-shadow:0 0 0 3px rgba(0,201,167,.12)}
+.login-input::placeholder{color:var(--tx3)}
+.eye-btn{
+  position:absolute;right:12px;top:50%;transform:translateY(-50%);
+  background:transparent;border:none;color:var(--tx3);
+  cursor:pointer;padding:4px;display:flex;align-items:center;
+  border-radius:4px;transition:color .2s;
+}
+.eye-btn:hover{color:var(--tx2)}
+.login-error{
+  display:none;
+  background:rgba(224,82,82,.1);border:1px solid rgba(224,82,82,.3);
+  border-radius:var(--r);padding:10px 14px;
+  font-size:12px;color:var(--rd);margin-bottom:1.1rem;font-family:var(--mo);
+}
+.login-error.show{display:block}
+.login-btn{
+  width:100%;padding:13px;
+  background:var(--t);border:none;border-radius:var(--r);
+  color:var(--n);font-family:var(--di);font-size:15px;font-weight:600;
+  cursor:pointer;transition:all .2s;margin-top:.5rem;
+  letter-spacing:-.01em;position:relative;overflow:hidden;
+}
+.login-btn:hover{background:var(--t2);transform:translateY(-1px);box-shadow:0 6px 20px rgba(0,201,167,.25)}
+.login-btn:active{transform:none}
+.login-btn:disabled{opacity:.6;cursor:not-allowed;transform:none}
+.login-btn .btn-loading{display:none}
+.login-btn.loading .btn-text{display:none}
+.login-btn.loading .btn-loading{display:inline-flex;align-items:center;gap:8px}
+.login-footer{
+  margin-top:2rem;padding-top:1.25rem;border-top:1px solid var(--b);
+  display:flex;align-items:center;justify-content:space-between;
+  font-size:11px;color:var(--tx3);font-family:var(--mo);
+}
+.secure-badge{display:flex;align-items:center;gap:6px}
+.secure-dot{width:6px;height:6px;border-radius:50%;background:var(--gr)}
+.login-dots{display:flex;gap:4px;margin-top:1.5rem;justify-content:center;}
+.login-dot{width:4px;height:4px;border-radius:50%;background:var(--b2)}
+.login-dot:nth-child(2){background:var(--t);opacity:.6}
+.login-dot:nth-child(3){background:var(--t)}
+.mini-spin{width:14px;height:14px;border:2px solid rgba(10,22,40,.3);border-top-color:var(--n);border-radius:50%;animation:sp .7s linear infinite;display:inline-block;}
+
+#app{display:none}
+#bar{
+  background:var(--n2);border-bottom:1px solid var(--b);
+  padding:0 2rem;height:58px;
+  display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:100;
+}
+.logo{font-family:var(--di);font-weight:700;font-size:18px;letter-spacing:-.03em;color:var(--tx);display:flex;align-items:center;gap:10px;}
+.lm{width:32px;height:32px;background:var(--t);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--n);font-weight:700;letter-spacing:-.5px;flex-shrink:0;}
+.la{color:var(--t)}
+#br{display:flex;align-items:center;gap:12px;font-size:12px;color:var(--tx3);font-family:var(--mo)}
+#sd{width:6px;height:6px;border-radius:50%;background:var(--t)}
+.user-chip{display:flex;align-items:center;gap:7px;background:var(--sf);border:1px solid var(--b2);border-radius:20px;padding:5px 12px;font-size:12px;color:var(--tx2);}
+.user-chip svg{color:var(--t)}
+.logout-btn{display:flex;align-items:center;gap:6px;background:transparent;border:1px solid var(--b2);border-radius:var(--r);padding:6px 14px;font-size:12px;font-family:var(--mo);color:var(--tx3);cursor:pointer;transition:all .2s;}
+.logout-btn:hover{background:rgba(224,82,82,.1);border-color:rgba(224,82,82,.3);color:var(--rd)}
+
+.admin-nav-btn{display:none;align-items:center;gap:6px;background:rgba(0,201,167,.08);border:1px solid rgba(0,201,167,.25);border-radius:var(--r);padding:6px 14px;font-size:12px;font-family:var(--mo);color:var(--t);cursor:pointer;transition:all .2s;}
+.admin-nav-btn:hover{background:rgba(0,201,167,.18);}
+.admin-nav-btn.visible{display:flex;}
+
+#admin-modal{
+  display:none;position:fixed;inset:0;z-index:300;
+  background:rgba(10,22,40,.85);backdrop-filter:blur(6px);
+  align-items:center;justify-content:center;padding:1.5rem;
+}
+#admin-modal.open{display:flex;}
+.admin-panel{
+  background:var(--n2);border:1px solid var(--b2);border-radius:20px;
+  width:100%;max-width:820px;max-height:90vh;overflow:hidden;
+  display:flex;flex-direction:column;box-shadow:var(--sh2);
+}
+.admin-head{
+  padding:1.5rem 2rem;border-bottom:1px solid var(--b);
+  display:flex;align-items:center;justify-content:space-between;flex-shrink:0;
+}
+.admin-head-title{font-family:var(--di);font-size:20px;font-weight:700;letter-spacing:-.03em;}
+.admin-head-title span{color:var(--t)}
+.admin-close{background:transparent;border:1px solid var(--b2);color:var(--tx3);padding:7px 14px;border-radius:var(--r);cursor:pointer;font-size:12px;font-family:var(--mo);transition:all .2s;}
+.admin-close:hover{background:rgba(224,82,82,.1);border-color:rgba(224,82,82,.3);color:var(--rd)}
+.admin-body{padding:1.5rem 2rem;overflow-y:auto;flex:1;}
+
+.admin-toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:.75rem;}
+.add-user-btn{
+  background:var(--t);border:none;border-radius:var(--r);
+  color:var(--n);font-family:var(--di);font-size:13px;font-weight:600;
+  padding:8px 18px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:7px;
+}
+.add-user-btn:hover{background:var(--t2);}
+.admin-users-table{width:100%;border-collapse:collapse;font-size:13px;}
+.admin-users-table th{
+  background:var(--n3);color:var(--tx3);font-family:var(--mo);font-size:10px;
+  letter-spacing:.06em;text-transform:uppercase;padding:9px 12px;text-align:left;
+  border-bottom:1px solid var(--b);
+}
+.admin-users-table td{padding:10px 12px;border-bottom:1px solid var(--b);vertical-align:middle;}
+.admin-users-table tr:last-child td{border-bottom:none}
+.admin-users-table tr:hover td{background:var(--sf)}
+.role-badge{display:inline-flex;align-items:center;padding:2px 10px;border-radius:20px;font-size:10px;font-family:var(--mo);font-weight:500;}
+.role-badge.admin{background:rgba(0,201,167,.12);color:var(--t);border:1px solid rgba(0,201,167,.25);}
+.role-badge.user{background:var(--sf2);color:var(--tx3);border:1px solid var(--b2);}
+.status-dot{width:7px;height:7px;border-radius:50%;display:inline-block;}
+.status-dot.active{background:var(--gr);}
+.status-dot.inactive{background:var(--rd);}
+.action-btn{
+  background:transparent;border:1px solid var(--b2);color:var(--tx3);
+  padding:4px 10px;border-radius:6px;cursor:pointer;font-size:11px;font-family:var(--mo);
+  transition:all .2s;
+}
+.action-btn:hover{background:var(--sf2);color:var(--tx);}
+.action-btn.danger:hover{background:rgba(224,82,82,.1);border-color:rgba(224,82,82,.3);color:var(--rd);}
+
+.admin-msg{
+  padding:10px 14px;border-radius:var(--r);font-size:12px;font-family:var(--mo);
+  margin-bottom:1rem;display:none;
+}
+.admin-msg.ok{background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.25);color:var(--gr);display:block;}
+.admin-msg.err{background:rgba(224,82,82,.1);border:1px solid rgba(224,82,82,.3);color:var(--rd);display:block;}
+
+#user-form-modal{
+  display:none;position:fixed;inset:0;z-index:400;
+  background:rgba(10,22,40,.9);backdrop-filter:blur(6px);
+  align-items:center;justify-content:center;padding:1.5rem;
+}
+#user-form-modal.open{display:flex;}
+.user-form-card{
+  background:var(--n2);border:1px solid var(--b2);border-radius:16px;
+  width:100%;max-width:440px;padding:2rem;box-shadow:var(--sh2);
+}
+.form-title{font-family:var(--di);font-size:18px;font-weight:700;margin-bottom:1.5rem;letter-spacing:-.02em;}
+.form-field{margin-bottom:1rem;}
+.form-field label{display:block;font-size:11px;font-family:var(--mo);color:var(--tx2);margin-bottom:6px;letter-spacing:.06em;text-transform:uppercase;}
+.form-input{
+  width:100%;padding:10px 14px;background:var(--n3);border:1px solid var(--b2);
+  border-radius:var(--r);color:var(--tx);font-family:var(--sa);font-size:13px;
+  outline:none;transition:border-color .2s;
+}
+.form-input:focus{border-color:var(--t);box-shadow:0 0 0 3px rgba(0,201,167,.1);}
+.form-select{
+  width:100%;padding:10px 36px 10px 14px;background:var(--sf);border:1px solid var(--b2);
+  border-radius:var(--r);color:var(--tx);font-family:var(--sa);font-size:13px;
+  cursor:pointer;appearance:none;outline:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238fa3bf' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 12px center;
+}
+.form-select:focus{border-color:var(--t);}
+.form-hint{font-size:11px;color:var(--tx3);margin-top:4px;font-family:var(--mo);}
+.form-row{display:flex;gap:.75rem;justify-content:flex-end;margin-top:1.5rem;}
+.form-cancel{background:transparent;border:1px solid var(--b2);color:var(--tx2);padding:9px 18px;border-radius:var(--r);cursor:pointer;font-size:13px;transition:all .2s;}
+.form-cancel:hover{background:var(--sf2);}
+.form-submit{background:var(--t);border:none;color:var(--n);padding:9px 20px;border-radius:var(--r);cursor:pointer;font-family:var(--di);font-size:14px;font-weight:600;transition:all .2s;}
+.form-submit:hover{background:var(--t2);}
+.form-submit:disabled{opacity:.5;cursor:not-allowed;}
+.form-err{font-size:12px;color:var(--rd);font-family:var(--mo);margin-top:.75rem;display:none;}
+.form-err.show{display:block;}
+
+#main{max-width:1140px;margin:0 auto;padding:2.5rem 1.5rem 0}
+#stp{display:flex;align-items:center;margin-bottom:2.5rem}
+.si{display:flex;align-items:center;gap:10px;font-size:12px;font-family:var(--mo);color:var(--tx3);transition:color .3s}
+.si.act{color:var(--tx)}.si.dn{color:var(--t)}
+.sn{width:26px;height:26px;border-radius:50%;border:1.5px solid currentColor;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;flex-shrink:0;transition:all .3s}
+.si.dn .sn{background:var(--t);border-color:var(--t);color:var(--n)}
+.sl{flex:1;height:1px;background:var(--b2);margin:0 12px;min-width:24px;transition:background .3s}
+.sl.dn{background:var(--t2)}
+.card{background:var(--n2);border:1px solid var(--b);border-radius:var(--rl);padding:1.75rem 2rem;box-shadow:var(--sh)}
+.ct{font-family:var(--di);font-size:20px;font-weight:600;letter-spacing:-.02em;margin-bottom:6px}
+.cs{font-size:13px;color:var(--tx2);margin-bottom:1.75rem;line-height:1.55}
+.upg{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-bottom:1.75rem}
+@media(max-width:640px){.upg{grid-template-columns:1fr}}
+.ubx{border:1.5px dashed var(--b2);border-radius:var(--r);padding:1.75rem 1.25rem;text-align:center;cursor:pointer;transition:all .2s;position:relative;background:var(--tg)}
+.ubx:hover,.ubx.drag{border-color:var(--t);background:var(--td)}
+.ubx.ok{border-style:solid;border-color:var(--t);background:var(--td)}
+.ubx input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.ui{font-size:2rem;margin-bottom:10px;line-height:1}
+.ul{font-family:var(--di);font-size:13px;font-weight:600;margin-bottom:4px}
+.uh{font-size:11px;color:var(--tx3)}
+.un{font-size:12px;color:var(--t);font-family:var(--mo);margin-top:6px;word-break:break-all}
+.uc{font-size:11px;color:var(--tx2);margin-top:2px}
+.pscr{background:var(--sf);border:1px solid var(--b);border-radius:var(--r);overflow:auto;max-height:160px;margin-top:.85rem}
+.plb{font-size:11px;font-family:var(--mo);color:var(--tx3);padding:6px 10px;border-bottom:1px solid var(--b)}
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-bottom:1.5rem}
+@media(max-width:580px){.fg{grid-template-columns:1fr}}
+.fld label{display:block;font-size:11px;font-family:var(--mo);color:var(--tx2);margin-bottom:7px;letter-spacing:.04em;text-transform:uppercase}
+select{width:100%;padding:10px 36px 10px 14px;background:var(--sf);border:1px solid var(--b2);border-radius:var(--r);color:var(--tx);font-family:var(--sa);font-size:13px;cursor:pointer;appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238fa3bf' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 12px center;transition:border-color .2s}
+select:focus{outline:none;border-color:var(--t)}
+.ib{background:var(--sf);border:1px solid var(--b);border-left:3px solid var(--t);border-radius:var(--r);padding:12px 16px;font-size:12px;color:var(--tx2);line-height:1.65;margin-bottom:1.5rem}
+.ib strong{color:var(--tx);font-family:var(--mo);font-size:11px;display:block;margin-bottom:4px;letter-spacing:.04em}
+.row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.re{justify-content:flex-end}
+button{font-family:var(--sa);font-size:13px;font-weight:500;border-radius:var(--r);padding:10px 22px;cursor:pointer;border:1px solid var(--b2);background:transparent;color:var(--tx2);transition:all .2s;display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
+button:hover:not(:disabled){background:var(--sf2);color:var(--tx)}
+button:disabled{opacity:.35;cursor:not-allowed}
+.bp{background:var(--t);border-color:var(--t);color:var(--n);font-weight:600}
+.bp:hover:not(:disabled){background:var(--t2);border-color:var(--t2);color:var(--n)}
+.dlw{position:relative;display:inline-flex}
+.bdl{background:var(--t);border-color:var(--t);color:var(--n);font-weight:600;border-radius:var(--r) 0 0 var(--r);border-right:1px solid rgba(0,0,0,.15)}
+.bdl:hover{background:var(--t2);color:var(--n)}
+.bca{background:var(--t);border-color:var(--t);color:var(--n);padding:10px 13px;border-radius:0 var(--r) var(--r) 0;border-left:1px solid rgba(0,0,0,.2)}
+.bca:hover{background:var(--t2);color:var(--n)}
+.dmn{display:none;position:absolute;top:calc(100% + 6px);right:0;background:var(--n2);border:1px solid var(--b2);border-radius:var(--r);min-width:175px;box-shadow:var(--sh);z-index:50;overflow:hidden}
+.dmn.op{display:block}
+.dit{display:flex;align-items:center;gap:10px;padding:10px 14px;font-size:13px;cursor:pointer;color:var(--tx2);transition:all .15s;border:none;background:transparent;width:100%;text-align:left;border-radius:0}
+.dit:hover{background:var(--sf2);color:var(--tx)}
+.dsp{height:1px;background:var(--b)}
+#ld{display:none;position:fixed;inset:0;background:rgba(10,22,40,.9);z-index:200;align-items:center;justify-content:center;flex-direction:column;gap:20px}
+#ld.on{display:flex}
+.spn{width:44px;height:44px;border:3px solid var(--b2);border-top-color:var(--t);border-radius:50%;animation:sp .8s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.ldt{font-family:var(--mo);font-size:13px;color:var(--tx2)}
+#err{display:none;background:rgba(224,82,82,.1);border:1px solid rgba(224,82,82,.3);border-radius:var(--r);padding:12px 16px;font-size:13px;color:var(--rd);margin-bottom:1.5rem}
+#err.on{display:block}
+.pan{display:none}.pan.on{display:block}
+@keyframes fu{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.ani{animation:fu .35s ease both}
+#res{display:none}
+.rh{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:1.75rem;flex-wrap:wrap;gap:1rem}
+.rt{font-family:var(--di);font-size:24px;font-weight:700;letter-spacing:-.03em}
+.rm{font-size:12px;color:var(--tx3);font-family:var(--mo);margin-top:4px}
+.ra{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.ib2{display:inline-flex;align-items:center;gap:8px;padding:8px 16px;border-radius:40px;font-family:var(--mo);font-size:12px;font-weight:500;letter-spacing:.06em}
+.ib2.ps{background:rgba(34,197,94,.12);color:var(--gr);border:1px solid rgba(34,197,94,.25)}
+.ib2.rv{background:rgba(245,166,35,.12);color:var(--am);border:1px solid rgba(245,166,35,.25)}
+.id{width:7px;height:7px;border-radius:50%;background:currentColor}
+.mg{display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:10px;margin-bottom:1.75rem}
+.mc{background:var(--n3);border:1px solid var(--b);border-radius:var(--r);padding:14px 16px}
+.mc.ac{border-color:rgba(0,201,167,.3);background:var(--td)}
+.ml{font-size:10px;font-family:var(--mo);color:var(--tx3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px}
+.mv{font-family:var(--di);font-size:22px;font-weight:600;letter-spacing:-.03em;line-height:1}
+.ms{font-size:10px;font-family:var(--mo);color:var(--tx2);margin-top:4px}
+.mv.tl{color:var(--t)}.mv.am{color:var(--am)}.mv.gn{color:var(--gr)}
+.rb{background:var(--n3);border:1px solid var(--b);border-radius:var(--r);overflow:hidden;max-width:490px}
+.rb table{width:100%;border-collapse:collapse}
+.rb td{padding:10px 16px;font-size:13px;border-bottom:1px solid var(--b)}
+.rb tr:last-child td{border-bottom:none}
+.rb .la2{color:var(--tx2)}.rb .va{text-align:right;font-family:var(--mo)}
+.rb .ng{color:var(--rd)}.rb .ps2{color:var(--gr)}
+.rb .tt td{background:var(--td);font-weight:600;border-top:1px solid var(--t)}
+.rb .tt .va{color:var(--t);font-size:16px}
+.rb .vr td{background:rgba(34,197,94,.08);font-weight:600;border-top:1px solid rgba(34,197,94,.25)}
+.rb .vr .va.ps2{font-size:15px}
+.rb .vr td{background:rgba(224,82,82,.08);border-top:1px solid rgba(224,82,82,.2)}
+.rb .vr .va.ng{font-size:15px}
+.tn{display:flex;border-bottom:1px solid var(--b);margin-bottom:1.5rem;overflow-x:auto;scrollbar-width:none}
+.tn::-webkit-scrollbar{display:none}
+.tb{padding:10px 16px;font-size:12px;font-family:var(--mo);white-space:nowrap;border:none;background:transparent;color:var(--tx3);border-bottom:2px solid transparent;margin-bottom:-1px;border-radius:0;transition:all .2s;cursor:pointer}
+.tb:hover{color:var(--tx2);background:transparent}
+.tb.on{color:var(--t);border-bottom-color:var(--t)}
+.tp{display:none}.tp.on{display:block}
+.tw{overflow-x:auto;border-radius:var(--r);border:1px solid var(--b)}
+table{width:100%;border-collapse:collapse;font-size:12px}
+thead th{background:var(--n3);color:var(--tx3);font-family:var(--mo);font-size:10px;letter-spacing:.06em;text-transform:uppercase;padding:9px 12px;text-align:left;border-bottom:1px solid var(--b);white-space:nowrap}
+tbody td{padding:8px 12px;border-bottom:1px solid var(--b);vertical-align:middle;color:var(--tx)}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover{background:var(--sf)}
+.trm{background:rgba(0,201,167,.04)}.trm:hover{background:rgba(0,201,167,.08)}
+.tru{background:rgba(245,166,35,.04)}.tru:hover{background:rgba(245,166,35,.08)}
+.trt td{background:var(--n3);font-weight:600;font-family:var(--mo);border-top:1px solid var(--b2)!important;border-bottom:none!important}
+.nm{font-family:var(--mo);text-align:right}
+.nr{max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--tx2)}
+.pl{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:10px;font-family:var(--mo);font-weight:500;white-space:nowrap}
+.pt{background:var(--td);color:var(--t);border:1px solid rgba(0,201,167,.2)}
+.pb{background:rgba(99,179,237,.1);color:#63b3ed;border:1px solid rgba(99,179,237,.2)}
+.pa{background:rgba(245,166,35,.1);color:var(--am);border:1px solid rgba(245,166,35,.2)}
+.pr{background:rgba(224,82,82,.1);color:var(--rd);border:1px solid rgba(224,82,82,.2)}
+.pg{background:rgba(34,197,94,.1);color:var(--gr);border:1px solid rgba(34,197,94,.2)}
+.nt{background:rgba(245,166,35,.07);border:1px solid rgba(245,166,35,.2);border-radius:var(--r);padding:10px 14px;font-size:12px;color:var(--tx2);margin-bottom:1rem;line-height:1.5}
+.ep{text-align:center;padding:3rem 1rem;color:var(--tx3);font-family:var(--mo);font-size:12px}
+.ei{font-size:2rem;margin-bottom:10px}
+.stl{font-family:var(--di);font-size:16px;font-weight:600;margin-bottom:1rem}
+.bg{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1rem}
+.tg{display:grid;grid-template-columns:1fr 1fr;gap:1rem;max-width:490px;margin-top:1.5rem}
+#ft{text-align:center;padding:24px 1rem 32px;font-family:var(--mo);font-size:11px;color:var(--tx3);border-top:1px solid rgba(255,255,255,.06);margin-top:3rem;letter-spacing:.04em}
+#ft .hl{color:var(--t)}
+</style>
+</head>
+<body>
+
+<div id="login-page">
+  <div class="login-card" id="login-card">
+    <div class="login-brand">
+      <div class="login-mark">EIS</div>
+      <div class="login-brand-name">Elites BankRecon<span> App</span></div>
+    </div>
+
+    <div class="login-title">Welcome!</div>
+    <div class="login-sub">Sign in to access the reconciliation system</div>
+
+    <div class="login-error" id="login-err">
+      ⚠ Invalid username or password. Please try again.
+    </div>
+
+    <div class="login-field">
+      <label>Username</label>
+      <div class="login-input-wrap">
+        <input class="login-input" type="text" id="usr" placeholder="Enter your username" autocomplete="username">
+      </div>
+    </div>
+
+    <div class="login-field">
+      <label>Password</label>
+      <div class="login-input-wrap">
+        <input class="login-input" type="password" id="pwd" placeholder="Enter your password" autocomplete="current-password">
+        <button class="eye-btn" type="button" id="eye-btn" title="Show / hide password">
+          <svg id="eye-show" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          <svg id="eye-hide" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <button class="login-btn" id="login-btn" type="button">
+      <span class="btn-text">Sign in →</span>
+      <span class="btn-loading"><span class="mini-spin"></span> Signing in...</span>
+    </button>
+
+    <div class="login-footer">
+      <div class="secure-badge">
+        <span class="secure-dot"></span>
+        <span>Secured system · EIS Financial Tools</span>
+      </div>
+      <span>v4.1</span>
+    </div>
+    <div class="login-dots">
+      <div class="login-dot"></div>
+      <div class="login-dot"></div>
+      <div class="login-dot"></div>
+    </div>
+    <div style="text-align:center;margin-top:1rem;font-size:12px;color:var(--tx3);font-family:var(--mo);">
+      <span id="show-forgot" style="color:var(--am);cursor:pointer;text-decoration:underline;">Forgot password?</span>
+      &nbsp;·&nbsp;
+      <span id="open-contact-admin" style="color:var(--am);cursor:pointer;text-decoration:underline;">Contact Admin</span>
+    </div>
+    <div style="text-align:center;margin-top:.6rem;font-size:12px;color:var(--tx3);font-family:var(--mo);">
+      Don&apos;t have an account?
+      <span id="show-signup" style="color:var(--t);cursor:pointer;text-decoration:underline;margin-left:4px;">Sign up</span>
+    </div>
+  </div>
+
+  <!-- ── SIGNUP CARD ─────────────────────────────────── -->
+  <div class="login-card" id="signup-card" style="display:none;margin-top:1.5rem;max-width:420px;width:100%;">
+    <div class="login-brand">
+      <div class="login-mark">EIS</div>
+      <div class="login-brand-name">Create<span> Account</span></div>
+    </div>
+    <div class="login-title">Sign Up</div>
+    <div class="login-sub">Fill in your details to request access</div>
+    <div class="login-error" id="signup-err" style="display:none;"></div>
+    <div id="signup-success" style="display:none;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.25);border-radius:var(--r);padding:10px 14px;font-size:12px;color:var(--gr);margin-bottom:1.1rem;font-family:var(--mo);line-height:1.6;"></div>
+    <div class="login-field">
+      <label>Surname</label>
+      <input class="login-input" type="text" id="su-surname" placeholder="e.g. Felix" autocomplete="family-name">
+    </div>
+    <div class="login-field">
+      <label>Other Names</label>
+      <input class="login-input" type="text" id="su-othernames" placeholder="e.g. Michael Happy" autocomplete="given-name">
+    </div>
+    <div class="login-field">
+      <label>Email Address</label>
+      <input class="login-input" type="email" id="su-email" placeholder="e.g. michael@company.com" autocomplete="email">
+    </div>
+    <div class="login-field">
+      <label>Phone Number</label>
+      <input class="login-input" type="tel" id="su-phone" placeholder="e.g. 08012345678" autocomplete="tel">
+    </div>
+    <button class="login-btn" id="signup-btn" type="button">
+      <span class="btn-text">Sign up →</span>
+      <span class="btn-loading"><span class="mini-spin"></span> Sending...</span>
+    </button>
+    <div style="text-align:center;margin-top:1.25rem;font-size:12px;color:var(--tx3);font-family:var(--mo);">
+      Already have an account?
+      <span id="show-login" style="color:var(--t);cursor:pointer;text-decoration:underline;margin-left:4px;">Sign in</span>
+    </div>
+    <div class="login-footer" style="margin-top:1.5rem;">
+      <div class="secure-badge"><span class="secure-dot"></span><span>Secured system · EIS Financial Tools</span></div>
+      <span>v4.1</span>
+    </div>
+  </div>
+
+  <!-- ── SET PASSWORD CARD ───────────────────────────── -->
+  <div class="login-card" id="setpwd-card" style="display:none;margin-top:1.5rem;max-width:420px;width:100%;">
+    <div class="login-brand">
+      <div class="login-mark">EIS</div>
+      <div class="login-brand-name">Set Your<span> Password</span></div>
+    </div>
+    <div class="login-title">Almost there!</div>
+    <div class="login-sub" id="setpwd-greeting">Please create your password to complete setup.</div>
+    <div class="login-error" id="setpwd-err" style="display:none;"></div>
+    <div id="setpwd-success" style="display:none;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.25);border-radius:var(--r);padding:10px 14px;font-size:12px;color:var(--gr);margin-bottom:1.1rem;font-family:var(--mo);"></div>
+    <div class="login-field">
+      <label>New Password</label>
+      <div class="login-input-wrap">
+        <input class="login-input" type="password" id="sp-password" placeholder="Minimum 8 characters" autocomplete="new-password">
+      </div>
+    </div>
+    <div class="login-field">
+      <label>Confirm Password</label>
+      <div class="login-input-wrap">
+        <input class="login-input" type="password" id="sp-confirm" placeholder="Re-enter your password" autocomplete="new-password">
+      </div>
+    </div>
+    <button class="login-btn" id="setpwd-btn" type="button">
+      <span class="btn-text">Set Password &amp; Continue →</span>
+      <span class="btn-loading"><span class="mini-spin"></span> Saving...</span>
+    </button>
+    <div class="login-footer" style="margin-top:1.5rem;">
+      <div class="secure-badge"><span class="secure-dot"></span><span>Secured system · EIS Financial Tools</span></div>
+      <span>v4.1</span>
+    </div>
+  </div>
+
+
+  <!-- ── FORGOT PASSWORD CARD ───────────────────────────── -->
+  <div class="login-card" id="forgot-card" style="display:none;margin-top:1.5rem;max-width:420px;width:100%;">
+    <div class="login-brand">
+      <div class="login-mark">EIS</div>
+      <div class="login-brand-name">Reset<span> Password</span></div>
+    </div>
+    <div class="login-title">Forgot Password?</div>
+    <div class="login-sub">Enter your registered email and we'll send you a reset link.</div>
+    <div class="login-error" id="forgot-err" style="display:none;"></div>
+    <div id="forgot-success" style="display:none;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.25);border-radius:var(--r);padding:10px 14px;font-size:12px;color:var(--gr);margin-bottom:1.1rem;font-family:var(--mo);line-height:1.6;"></div>
+    <div class="login-field">
+      <label>Email Address</label>
+      <input class="login-input" type="email" id="fp-email" placeholder="Enter your registered email" autocomplete="email">
+    </div>
+    <button class="login-btn" id="forgot-btn" type="button" style="background:var(--am);border-color:var(--am);">
+      <span class="btn-text">Send Reset Link →</span>
+      <span class="btn-loading"><span class="mini-spin"></span> Sending...</span>
+    </button>
+    <div style="text-align:center;margin-top:1.25rem;font-size:12px;color:var(--tx3);font-family:var(--mo);">
+      Remembered it?
+      <span id="forgot-back-login" style="color:var(--t);cursor:pointer;text-decoration:underline;margin-left:4px;">Sign in</span>
+    </div>
+    <div class="login-footer" style="margin-top:1.5rem;">
+      <div class="secure-badge"><span class="secure-dot"></span><span>Secured system · EIS Financial Tools</span></div>
+      <span>v4.1</span>
+    </div>
+  </div>
+
+  <!-- ── RESET PASSWORD CARD ────────────────────────────── -->
+  <div class="login-card" id="resetpwd-card" style="display:none;margin-top:1.5rem;max-width:420px;width:100%;">
+    <div class="login-brand">
+      <div class="login-mark">EIS</div>
+      <div class="login-brand-name">New<span> Password</span></div>
+    </div>
+    <div class="login-title">Set New Password</div>
+    <div class="login-sub" id="resetpwd-greeting">Enter your new password below.</div>
+    <div class="login-error" id="resetpwd-err" style="display:none;"></div>
+    <div id="resetpwd-success" style="display:none;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.25);border-radius:var(--r);padding:10px 14px;font-size:12px;color:var(--gr);margin-bottom:1.1rem;font-family:var(--mo);"></div>
+    <div class="login-field">
+      <label>New Password</label>
+      <input class="login-input" type="password" id="rp-password" placeholder="Minimum 8 characters" autocomplete="new-password">
+    </div>
+    <div class="login-field">
+      <label>Confirm New Password</label>
+      <input class="login-input" type="password" id="rp-confirm" placeholder="Re-enter your new password" autocomplete="new-password">
+    </div>
+    <button class="login-btn" id="resetpwd-btn" type="button" style="background:var(--am);border-color:var(--am);">
+      <span class="btn-text">Reset Password →</span>
+      <span class="btn-loading"><span class="mini-spin"></span> Saving...</span>
+    </button>
+    <div class="login-footer" style="margin-top:1.5rem;">
+      <div class="secure-badge"><span class="secure-dot"></span><span>Secured system · EIS Financial Tools</span></div>
+      <span>v4.1</span>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── CONTACT ADMIN MODAL ────────────────────────────────── -->
+<div id="contact-admin-modal" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(10,22,40,.92);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:1.5rem;">
+  <div style="background:var(--n2);border:1px solid var(--b2);border-radius:20px;width:100%;max-width:460px;padding:2.25rem 2rem 2rem;box-shadow:var(--sh2);position:relative;">
+    <button id="close-contact-modal" style="position:absolute;top:16px;right:16px;background:transparent;border:1px solid var(--b2);color:var(--tx3);padding:5px 11px;border-radius:var(--r);cursor:pointer;font-size:12px;font-family:var(--mo);transition:all .2s;">✕</button>
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:1.5rem;">
+      <div style="width:42px;height:42px;background:var(--am);border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:var(--di);font-size:11px;font-weight:700;color:var(--n);flex-shrink:0;">EIS</div>
+      <div style="font-family:var(--di);font-size:18px;font-weight:700;letter-spacing:-.03em;">Contact <span style="color:var(--am);">Admin</span></div>
+    </div>
+    <p style="font-size:13px;color:var(--tx2);margin-bottom:1.5rem;line-height:1.55;">Send a message to the administrator. You'll receive a reply at your email address.</p>
+    <div id="contact-admin-err" style="display:none;background:rgba(224,82,82,.1);border:1px solid rgba(224,82,82,.3);border-radius:var(--r);padding:10px 14px;font-size:12px;color:var(--rd);margin-bottom:1rem;font-family:var(--mo);"></div>
+    <div id="contact-admin-ok" style="display:none;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.25);border-radius:var(--r);padding:10px 14px;font-size:12px;color:var(--gr);margin-bottom:1rem;font-family:var(--mo);"></div>
+    <div style="margin-bottom:1rem;">
+      <label style="display:block;font-size:11px;font-family:var(--mo);color:var(--tx2);margin-bottom:7px;letter-spacing:.06em;text-transform:uppercase;">Username</label>
+      <input class="login-input" type="text" id="ca-username" placeholder="Enter your username" autocomplete="off">
+    </div>
+    <div style="margin-bottom:1rem;">
+      <label style="display:block;font-size:11px;font-family:var(--mo);color:var(--tx2);margin-bottom:7px;letter-spacing:.06em;text-transform:uppercase;">Email Address</label>
+      <input class="login-input" type="email" id="ca-email" placeholder="Enter your email address" autocomplete="email">
+    </div>
+    <div style="margin-bottom:1.25rem;">
+      <label style="display:block;font-size:11px;font-family:var(--mo);color:var(--tx2);margin-bottom:7px;letter-spacing:.06em;text-transform:uppercase;">Your Request / Message</label>
+      <textarea id="ca-message" placeholder="Describe your request e.g. password reset, access renewal, account issue..." style="width:100%;padding:12px 16px;background:var(--n3);border:1px solid var(--b2);border-radius:var(--r);color:var(--tx);font-family:var(--sa);font-size:13px;outline:none;resize:vertical;min-height:100px;transition:border-color .2s;"></textarea>
+    </div>
+    <button id="ca-send-btn" type="button" style="width:100%;padding:13px;background:var(--am);border:none;border-radius:var(--r);color:var(--n);font-family:var(--di);font-size:15px;font-weight:600;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px;">
+      <span class="btn-text">Send Message →</span>
+      <span class="btn-loading" style="display:none;align-items:center;gap:8px;"><span class="mini-spin"></span> Sending...</span>
+    </button>
+    <p style="text-align:center;font-size:11px;color:var(--tx3);font-family:var(--mo);margin-top:1rem;">Messages are sent directly to the Admin</p>
+  </div>
+</div>
+
+<div id="admin-modal">
+  <div class="admin-panel">
+    <div class="admin-head">
+      <div class="admin-head-title">Admin <span>User Management</span></div>
+      <button class="admin-close" id="admin-close-btn">✕ Close</button>
+    </div>
+    <div class="admin-body">
+      <div class="admin-msg" id="admin-msg"></div>
+      <div class="admin-toolbar">
+        <div style="font-size:12px;color:var(--tx3);font-family:var(--mo);">Manage user accounts</div>
+        <button class="add-user-btn" id="add-user-btn">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add User
+        </button>
+      </div>
+      <div style="overflow-x:auto;border:1px solid var(--b);border-radius:var(--r);">
+        <table class="admin-users-table">
+          <thead>
+            <tr>
+              <th>Username</th>
+              <th>Full Name</th>
+              <th>Role</th>
+              <th>Status</th>
+              <th>Last Login</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="admin-users-tbody">
+            <tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--tx3);font-family:var(--mo);font-size:12px;">Loading users...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="user-form-modal">
+  <div class="user-form-card">
+    <div class="form-title" id="form-title">Add User</div>
+    <div class="form-field">
+      <label>Username</label>
+      <input class="form-input" type="text" id="f-username" placeholder="e.g. john.doe" autocomplete="off">
+    </div>
+    <div class="form-field">
+      <label>Full Name</label>
+      <input class="form-input" type="text" id="f-name" placeholder="e.g. John Doe">
+    </div>
+    <div class="form-field">
+      <label>Password <span id="f-pwd-hint" style="color:var(--tx3)">(leave blank to keep current)</span></label>
+      <input class="form-input" type="password" id="f-password" placeholder="Min 8 characters" autocomplete="new-password">
+    </div>
+    <div class="form-field">
+      <label>Role</label>
+      <select class="form-select" id="f-role">
+        <option value="user">User</option>
+        <option value="admin">Admin</option>
+      </select>
+    </div>
+    <div class="form-field" id="f-status-field" style="display:none">
+      <label>Status</label>
+      <select class="form-select" id="f-status">
+        <option value="true">Active</option>
+        <option value="false">Inactive</option>
+      </select>
+    </div>
+    <div class="form-err" id="form-err"></div>
+    <div class="form-row">
+      <button class="form-cancel" id="form-cancel-btn">Cancel</button>
+      <button class="form-submit" id="form-submit-btn">Save User</button>
+    </div>
+  </div>
+</div>
+
+<div id="app">
+
+  <div id="bar">
+    <div class="logo">
+      <div class="lm">EIS</div>
+      Elites BankRecon<span class="la"> App</span>
+    </div>
+    <div id="br">
+      <span id="sd"></span>
+      <span id="stx">Elites BankRecon App — Ready</span>
+      <div class="user-chip">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <span id="user-display">User</span>
+      </div>
+      <button class="admin-nav-btn" id="admin-nav-btn">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 1 0-16 0"/><circle cx="20" cy="20" r="2"/><path d="M20 18v-1M20 22v-1M18 20h-1M22 20h-1"/></svg>
+        Admin
+      </button>
+      <button class="logout-btn" id="logout-btn">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Sign out
+      </button>
+    </div>
+  </div>
+
+  <div id="main">
+    <div id="stp">
+      <div class="si act" id="s1"><div class="sn">1</div><span>Upload files</span></div>
+      <div class="sl" id="l1"></div>
+      <div class="si" id="s2"><div class="sn">2</div><span>Date formats</span></div>
+      <div class="sl" id="l2"></div>
+      <div class="si" id="s3"><div class="sn">3</div><span>Results</span></div>
+    </div>
+    <div id="err"></div>
+
+    
+    <div class="pan on ani" id="p1">
+      <div class="card">
+        <div class="ct">Upload source files</div>
+        <div class="cs">Accepts CSV, XLSX, XLS or XLSM. Columns: Date · Narration · DR Amount · CR Amount · Balance Amount.<br>Headers and blank rows are auto-skipped. Multi-month statements are fully supported.</div>
+        <div class="upg">
+          <div>
+            <div class="ubx" id="bb">
+              <input type="file" id="bi" accept=".csv,.xlsx,.xls,.xlsm">
+              <div class="ui">🏦</div><div class="ul">Bank Statement</div>
+              <div class="uh">Click or drop file here</div>
+              <div class="un" id="bn"></div><div class="uc" id="bc"></div>
+            </div>
+            <div id="bpv"></div>
+          </div>
+          <div>
+            <div class="ubx" id="gb">
+              <input type="file" id="gi" accept=".csv,.xlsx,.xls,.xlsm">
+              <div class="ui">📒</div><div class="ul">GL Account</div>
+              <div class="uh">Click or drop file here</div>
+              <div class="un" id="gn"></div><div class="uc" id="gc"></div>
+            </div>
+            <div id="gpv"></div>
+          </div>
+        </div>
+        <div class="row re"><button class="bp" id="nxt" disabled>Continue →</button></div>
+      </div>
+    </div>
+
+    
+    <div class="pan ani" id="p2">
+      <div class="card">
+        <div class="ct">Date format settings</div>
+        <div class="cs">Select the date format used in each file. Critical for correct parsing — wrong format misreads dates.</div>
+        <div class="fg">
+          <div class="fld"><label>Bank Statement date format</label>
+            <select id="bf"><option value="DMY">DMY — dd/mm/yyyy (Nigerian default)</option><option value="MDY">MDY — mm/dd/yyyy</option><option value="YMD">YMD — yyyy-mm-dd</option></select>
+          </div>
+          <div class="fld"><label>GL Account date format</label>
+            <select id="gf"><option value="DMY">DMY — dd/mm/yyyy (Nigerian default)</option><option value="MDY">MDY — mm/dd/yyyy</option><option value="YMD">YMD — yyyy-mm-dd</option></select>
+          </div>
+        </div>
+        <div class="ib">
+          <strong>MATCHING LOGIC</strong>
+          Outflows: BS Debit ↔ GL Credit &nbsp;·&nbsp; Inflows: BS Credit ↔ GL Debit<br>
+          Amount tolerance ₦0.005 &nbsp;·&nbsp; Date: same month OR within ±7 days across months (Pass 2: ±14 days)<br>
+          Fuzzy scoring: separators replaced in GL narration only; long numeric tokens (NUBAN accounts) score 4 pts
+        </div>
+        <div class="row"><button id="bk">← Back</button><button class="bp" id="run">▶ Run reconciliation</button></div>
+      </div>
+    </div>
+
+    
+    <div class="pan ani" id="p3">
+      <div id="res">
+        <div class="rh">
+          <div><div class="rt">Reconciliation results</div><div class="rm" id="rmeta"></div></div>
+          <div class="ra">
+            <div class="ib2 ps" id="ibg"><div class="id"></div>DATE INTEGRITY: PASS</div>
+            <div class="dlw">
+              <button class="bdl" id="bxl">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Download Excel
+              </button>
+              <button class="bca" id="bca">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
+              </button>
+              <div class="dmn" id="dmn">
+                <button class="dit" id="mxl"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>Download as .xlsx</button>
+                <div class="dsp"></div>
+                <button class="dit" id="mpd"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Download as .pdf</button>
+              </div>
+            </div>
+            <button id="bnw">↺ New reconciliation</button>
+          </div>
+        </div>
+        <div class="mg" id="mgr"></div>
+        <div class="tn">
+          <button class="tb on" data-t="sum">Summary</button>
+          <button class="tb" data-t="out">Matched outflows</button>
+          <button class="tb" data-t="inf">Matched inflows</button>
+          <button class="tb" data-t="bsd">BS debit not in GL</button>
+          <button class="tb" data-t="bsc">BS credit not in GL</button>
+          <button class="tb" data-t="glc">GL credit not in BS</button>
+          <button class="tb" data-t="gld">GL debit not in BS</button>
+          <button class="tb" data-t="aud">Date audit</button>
+        </div>
+        <div id="t-sum" class="tp on"></div>
+        <div id="t-out" class="tp"></div>
+        <div id="t-inf" class="tp"></div>
+        <div id="t-bsd" class="tp"></div>
+        <div id="t-bsc" class="tp"></div>
+        <div id="t-glc" class="tp"></div>
+        <div id="t-gld" class="tp"></div>
+        <div id="t-aud" class="tp"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="ft">&copy; <span id="yr"></span> <span class="hl">Michael Felix Happy</span> &nbsp;·&nbsp; IBRAP &nbsp;·&nbsp; All rights reserved</div>
+  <div id="ld"><div class="spn"></div><div class="ldt" id="ldm">Processing...</div></div>
+
+</div>
+
+<script>
+const API_BASE = "https://eis-recbackend.onrender.com/api/auth";
+
+'use strict';
+const _0xAPB_ = 'https://eis-recbackend.onrender.com/api';
+let _0xa1b2 = null;
+let _0xb2c3   = null;
+function _0xc3d4()  { return _0xb2c3; }
+function _0xd4e5(t) { _0xb2c3 = t; sessionStorage.setItem('eis_token', t); }
+function _0xe5f6(){ _0xb2c3 = null; sessionStorage.removeItem('eis_token'); }
+async function _0xe10d(path, opts = {}) {
+const headers = { 'Content-Type': 'application/json', ...(opts.headers || {}) };
+const tok = _0xc3d4();
+if (tok) headers['Authorization'] = 'Bearer ' + tok;
+const res = await fetch(_0xAPB_ + path, { ...opts, headers });
+const data = await res.json();
+if (!res.ok) throw new Error(data.error || 'Request failed');
+return data;
+}
+const _0xf601 = document.getElementById('login-page');
+const _0x0712    = document.getElementById('app');
+const _0x1823  = document.getElementById('login-btn');
+const _0x2934  = document.getElementById('login-err');
+const _0x3a45  = document.getElementById('usr');
+const _0x4b56  = document.getElementById('pwd');
+function _0x4773(msg) {
+_0x2934.textContent = '⚠ ' + (msg || 'Invalid username or password. Please try again.');
+_0x2934.classList.add('show');
+_0x4b56.value = '';
+_0x4b56.focus();
+}
+function _0xd0fc(user) {
+_0xa1b2 = user;
+document.getElementById('user-display').textContent = user.name;
+const adminBtn = document.getElementById('admin-nav-btn');
+if (user.role === 'admin') adminBtn.classList.add('visible');
+else adminBtn.classList.remove('visible');
+_0xf601.style.display = 'none';
+_0x0712.style.display = 'block';
+}
+_0x1823.addEventListener('click', async () => {
+const u = _0x3a45.value.trim();
+const p = _0x4b56.value;
+if (!u || !p) { _0x4773('Please enter both username and password.'); return; }
+_0x1823.classList.add('loading');
+_0x1823.disabled = true;
+_0x2934.classList.remove('show');
+try {
+const data = await _0xe10d('/login', {
+method: 'POST',
+body: JSON.stringify({ username: u, password: p }),
+});
+_0xd4e5(data.token);
+_0xd0fc(data.user);
+} catch (err) {
+_0x4773(err.message || 'Invalid username or password.');
+} finally {
+_0x1823.classList.remove('loading');
+_0x1823.disabled = false;
+}
+});
+[_0x3a45, _0x4b56].forEach(inp => {
+inp.addEventListener('keydown', e => { if (e.key === 'Enter') _0x1823.click(); });
+});
+const _0x5c67  = document.getElementById('eye-btn');
+const _0x6d78 = document.getElementById('eye-show');
+const _0x7e89 = document.getElementById('eye-hide');
+_0x5c67.addEventListener('click', () => {
+const show = _0x4b56.type === 'password';
+_0x4b56.type = show ? 'text' : 'password';
+_0x6d78.style.display = show ? 'none' : '';
+_0x7e89.style.display = show ? '' : 'none';
+});
+(async () => {
+const saved = sessionStorage.getItem('eis_token');
+if (saved) {
+_0xd4e5(saved);
+try {
+const data = await _0xe10d('/me');
+_0xd0fc(data.user);
+} catch { _0xe5f6(); }
+}
+})();
+document.getElementById('logout-btn').addEventListener('click', () => {
+if (!confirm('Sign out of EIS Bank Recon?')) return;
+_0xe5f6();
+_0xa1b2 = null;
+_0xST__.bsFile = _0xST__.glFile = _0xST__.result = null;
+_0xST__._0xb2cd6 = _0xST__._0xc3de7 = [];
+['bb','gb'].forEach(id => { const b = document.getElementById(id); if(b) b.classList.remove('ok','drag'); });
+['bn','gn','bc','gc'].forEach(id => { const el = document.getElementById(id); if(el) el.textContent = ''; });
+['bpv','gpv'].forEach(id => { const el = document.getElementById(id); if(el) el.innerHTML = ''; });
+const nxt = document.getElementById('nxt');
+if(nxt) nxt.disabled = true;
+const res = document.getElementById('res');
+if(res) res.style.display = 'none';
+document.getElementById('admin-nav-btn').classList.remove('visible');
+_0x3a45.value = ''; _0x4b56.value = '';
+_0x2934.classList.remove('show');
+_0xadcf(1);
+_0xcfeb('EIS Bank Recon — Ready');
+_0x0712.style.display = 'none';
+_0xf601.style.display = 'flex';
+_0x3a45.focus();
+});
+const _0x8f9a     = document.getElementById('admin-modal');
+const _0x90ab  = document.getElementById('user-form-modal');
+let _0x293d4    = null;
+document.getElementById('admin-nav-btn').addEventListener('click', () => {
+_0x8f9a.classList.add('open');
+_0xf21e();
+});
+document.getElementById('admin-close-btn').addEventListener('click', () => {
+_0x8f9a.classList.remove('open');
+});
+function _0x3662(msg, type = 'ok') {
+const el = document.getElementById('admin-msg');
+el.textContent = msg;
+el.className = 'admin-msg ' + type;
+setTimeout(() => { el.className = 'admin-msg'; }, 4000);
+}
+async function _0xf21e() {
+const tbody = document.getElementById('admin-users-tbody');
+tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--tx3);font-family:var(--mo);font-size:12px;">Loading...</td></tr>';
+try {
+const data = await _0xe10d('/admin/users');
+if (!data.users.length) {
+tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--tx3);font-family:var(--mo);font-size:12px;">No users found.</td></tr>';
+return;
+}
+tbody.innerHTML = data.users.map(u => `
+<tr>
+<td style="font-family:var(--mo);font-size:12px;">${u.username}</td>
+<td>${u.name}</td>
+<td><span class="role-badge ${u.role}">${u.role}</span></td>
+<td><span class="status-dot ${u._0x182c3 ? 'active' : 'inactive'}"></span> ${u._0x182c3 ? 'Active' : 'Inactive'}</td>
+<td style="font-family:var(--mo);font-size:11px;color:var(--tx3);">${u.lastLogin ? new Date(u.lastLogin).toLocaleDateString('en-GB') : '—'}</td>
+<td style="display:flex;gap:6px;">
+<button class="action-btn" onclick="_0x1440('${u._id}','${u.username}','${u.name}','${u.role}',${u._0x182c3})">Edit</button>
+<button class="action-btn danger" onclick="deleteUser('${u._id}','${u.username}')">Delete</button>
+</td>
+</tr>
+`).join('');
+} catch (err) {
+tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--rd);font-family:var(--mo);font-size:12px;">${err.message}</td></tr>`;
+}
+}
+document.getElementById('add-user-btn').addEventListener('click', () => _0x032f());
+function _0x032f() {
+_0x293d4 = null;
+document.getElementById('form-title').textContent = 'Add New User';
+document.getElementById('f-username').value = '';
+document.getElementById('f-username').disabled = false;
+document.getElementById('f-name').value = '';
+document.getElementById('f-password').value = '';
+document.getElementById('f-password').placeholder = 'Min 8 characters';
+document.getElementById('f-pwd-hint').style.display = 'none';
+document.getElementById('f-role').value = 'user';
+document.getElementById('f-status-field').style.display = 'none';
+document.getElementById('form-err').className = 'form-err';
+document.getElementById('form-submit-btn').textContent = 'Create User';
+_0x90ab.classList.add('open');
+}
+function _0x1440(id, username, name, role, _0x182c3) {
+_0x293d4 = id;
+document.getElementById('form-title').textContent = 'Edit User';
+document.getElementById('f-username').value = username;
+document.getElementById('f-username').disabled = true;
+document.getElementById('f-name').value = name;
+document.getElementById('f-password').value = '';
+document.getElementById('f-password').placeholder = 'Leave blank to keep current';
+document.getElementById('f-pwd-hint').style.display = '';
+document.getElementById('f-role').value = role;
+document.getElementById('f-status-field').style.display = '';
+document.getElementById('f-status').value = String(_0x182c3);
+document.getElementById('form-err').className = 'form-err';
+document.getElementById('form-submit-btn').textContent = 'Save Changes';
+_0x90ab.classList.add('open');
+}
+function _0x2551() {
+_0x90ab.classList.remove('open');
+_0x293d4 = null;
+}
+document.getElementById('form-cancel-btn').addEventListener('click', _0x2551);
+document.getElementById('form-submit-btn').addEventListener('click', async () => {
+const btn = document.getElementById('form-submit-btn');
+const errEl = document.getElementById('form-err');
+errEl.className = 'form-err';
+const name     = document.getElementById('f-name').value.trim();
+const password = document.getElementById('f-password').value;
+const role     = document.getElementById('f-role').value;
+const _0x182c3 = document.getElementById('f-status').value === 'true';
+btn.disabled = true;
+btn.textContent = 'Saving...';
+try {
+if (_0x293d4) {
+const body = { name, role, _0x182c3 };
+if (password) body.password = password;
+await _0xe10d('/admin/users/' + _0x293d4, { method: 'PATCH', body: JSON.stringify(body) });
+_0x3662('User updated successfully.');
+} else {
+const username = document.getElementById('f-username').value.trim();
+await _0xe10d('/admin/users', { method: 'POST', body: JSON.stringify({ username, name, password, role }) });
+_0x3662('User created successfully.');
+}
+_0x2551();
+_0xf21e();
+} catch (err) {
+errEl.textContent = err.message;
+errEl.className = 'form-err show';
+} finally {
+btn.disabled = false;
+btn.textContent = _0x293d4 ? 'Save Changes' : 'Create User';
+}
+});
+async function deleteUser(id, username) {
+if (!confirm(`Permanently delete user "${username}"? This cannot be undone.`)) return;
+try {
+await _0xe10d('/admin/users/' + id, { method: 'DELETE' });
+_0x3662('User deleted.');
+_0xf21e();
+} catch (err) {
+_0x3662(err.message, 'err');
+}
+}
+const _0xd00c   = 0.005;
+const _0xe11d  = 7;
+const SERIAL_MIN = 36526;
+const SERIAL_MAX = 62091;
+const _0x5884 = new Set([
+'THE','AND','FOR','FROM','TO','IN','OF','ON','AT','BY','IS','A','AN','WITH','VIA',
+'REF','INFO','IFO','FRM','BG','BNG','BGT','NIP','TRF','MOB','PAN','PAC',
+'PMT','PAY','PYT','RPTY','RPYT','REPAYMENT','COOPERATIVE','COOP',
+'SAVINGS','FUND','GIVEN','OUTWARD','INSTANT','PAYMENT','TRANSFER',
+'CUSTOMERS','BETWEEN','WITHDRAWAL','WDR','WTD','WIT','BNK','LTD','PLC',
+'NGN','NGT','NGO','PERSONAL','STAFF','CAPITAL','AFRICAN','HOLDINGS',
+'BAL','BALANCE','DR','CR','ACC','ACCT','ACCOUNT'
+]);
+const _0xf22e = { jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,oct:10,nov:11,dec:12 };
+function _0x3c4d(raw, fmt) {
+if (raw === null || raw === undefined || raw === '') return null;
+if (raw instanceof Date) return isNaN(raw.getTime()) ? null : _0x6f8b(raw);
+if (typeof raw === 'number') {
+if (!Number.isFinite(raw) || raw < SERIAL_MIN || raw > SERIAL_MAX) return null;
+const d = new Date(Date.UTC(1899, 11, 30) + Math.round(raw) * 86400000);
+return isNaN(d.getTime()) ? null : _0x6f8b(d);
+}
+let s = String(raw).trim();
+if (!s || s.length < 6) return null;
+s = s.replace(/\s+\d{1,2}:\d{2}(:\d{2})?(\s*(AM|PM))?$/i, '').trim();
+const nm = _0x5e6f(s);
+if (nm) return nm;
+s = s.replace(/\./g, '/').replace(/-/g, '/').replace(/,/g, '').replace(/\s+/g, '/');
+const p = s.split('/').filter(x => x !== '');
+if (p.length !== 3) return null;
+let y, m, d;
+switch (fmt) {
+case 'DMY': d=+p[0]; m=+p[1]; y=+p[2]; break;
+case 'MDY': m=+p[0]; d=+p[1]; y=+p[2]; break;
+case 'YMD': y=+p[0]; m=+p[1]; d=+p[2]; break;
+default: return null;
+}
+if (!y || !m || !d) return null;
+if (y < 100) y += 2000;
+if (m < 1 || m > 12 || d < 1 || d > 31) return null;
+const dt = new Date(y, m - 1, d);
+if (isNaN(dt.getTime()) || dt.getMonth() !== m - 1) return null;
+return dt;
+}
+function _0x5e6f(s) {
+const re = /^(\d{1,2})[\s\-\/]+([A-Za-z]{3,9})[\s\-\/,]+(\d{2,4})$|^([A-Za-z]{3,9})[\s\-\/,]+(\d{1,2})[\s\-\/,]+(\d{2,4})$/;
+const match = s.match(re);
+if (!match) return null;
+let d, mn, y;
+if (match[1]) { d=+match[1]; mn=_0xf22e[match[2].toLowerCase().slice(0,3)]; y=+match[3]; }
+else          { mn=_0xf22e[match[4].toLowerCase().slice(0,3)]; d=+match[5]; y=+match[6]; }
+if (!mn) return null;
+if (y < 100) y += 2000;
+const dt = new Date(y, mn - 1, d);
+return isNaN(dt.getTime()) ? null : dt;
+}
+function _0x6f8b(d)   { return new Date(d.getFullYear(), d.getMonth(), d.getDate()); }
+function _0x7a9c(a,b) { return a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth(); }
+function _0x8bad(d)     { if(!d) return ''; const mo=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']; return `${String(d.getDate()).padStart(2,'0')}-${mo[d.getMonth()]}-${d.getFullYear()}`; }
+function _0x9cbe(d)   { const mo=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']; return `${mo[d.getMonth()]} ${d.getFullYear()}`; }
+function _0x5e7a(v) {
+if (v===null||v===undefined||v==='') return 0;
+if (typeof v==='number') return isNaN(v)?0:Math.round(v*100)/100;
+let s=String(v).replace(/[₦$£€\s]/g,'').replace(/,/g,'').trim();
+if (s.startsWith('(')&&s.endsWith(')')) s='-'+s.slice(1,-1);
+s=s.replace(/[DdRr]{2}$/,'').replace(/[Cc][Rr]$/,'').trim();
+const n=parseFloat(s);
+return isNaN(n)?0:Math.round(n*100)/100;
+}
+function _0x9c0d(glNarr, bsNarr) {
+const SEP='-_|/.,;:#()[]{}';
+let glUp=String(glNarr||'').toUpperCase();
+const bsUp=String(bsNarr||'').toUpperCase();
+for (const c of SEP) glUp=glUp.split(c).join(' ');
+let bsNorm=bsUp;
+for (const c of SEP) bsNorm=bsNorm.split(c).join(' ');
+let hits=0;
+for (const w of glUp.split(' ')) {
+const tok=w.trim(); if (!tok) continue;
+const isNum=/^\d+$/.test(tok);
+if (_0x5884.has(tok)) continue;
+if (isNum&&tok.length<6) continue;
+if (!isNum&&tok.length<3) continue;
+if (bsUp.includes(tok)) {
+hits+=isNum?4:2;
+} else if (!isNum) {
+if (tok.length>=5&&bsUp.includes(tok.slice(0,5))) hits+=1;
+else if (tok.length>=4&&bsUp.includes(tok.slice(0,4))) hits+=1;
+if (tok.length>=5&&bsUp.length>=5&&tok.includes(bsUp.slice(0,5))) hits+=1;
+}
+}
+for (const w of bsNorm.split(' ')) {
+const tok=w.trim(); if (!tok) continue;
+const isNum=/^\d+$/.test(tok);
+if (_0x5884.has(tok)) continue;
+if (isNum&&tok.length<6) continue;
+if (!isNum&&tok.length<3) continue;
+if (!glUp.includes(tok)&&isNum) continue;
+if (glUp.includes(tok)&&!isNum) hits+=1;
+else if (glUp.includes(tok)&&isNum) hits+=3;
+}
+return hits;
+}
+function _0x1e2f(kw, dd) { return kw*10000-dd; }
+function _0x7a8b(_0x90ab4, fmt, _0xa1bc5, _0x2934d) {
+let start=-1;
+for (let i=0;i<_0x90ab4.length;i++) {
+const row=_0x90ab4[i]; if(!row||!row.length) continue;
+const cell=row[0]; if(cell===''||cell===null||cell===undefined) continue;
+if (_0x3c4d(cell,fmt)) { start=i; break; }
+}
+if (start<0) return [];
+const data=[];
+for (let i=start;i<_0x90ab4.length;i++) {
+const row=_0x90ab4[i]; if(!row||!row.length) continue;
+const cell=row[0]; if(cell===''||cell===null||cell===undefined) continue;
+const dt=_0x3c4d(cell,fmt);
+if (!dt) {
+const s=String(cell);
+if (s&&!/^(date|narration|amount|balance|description|particulars|ref|s\/n|#)/i.test(s))
+_0x2934d.push({sheet:_0xa1bc5,row:i+1,original:s,parsed:'',comment:'PARSE FAILED'});
+continue;
+}
+if (data.length>0) {
+const prev=data[data.length-1].date;
+if (!_0x7a9c(dt,prev)&&Math.abs(dt-prev)/86400000>60)
+_0x2934d.push({sheet:_0xa1bc5,row:i+1,original:String(cell),parsed:_0x8bad(dt),comment:'NOTE – LARGE DATE GAP'});
+}
+_0x2934d.push({sheet:_0xa1bc5,row:i+1,original:String(cell),parsed:_0x8bad(dt),comment:'PARSED OK'});
+data.push({date:dt,narr:String(row[1]||'').trim(),dr:_0x5e7a(row[2]),cr:_0x5e7a(row[3]),bal:_0x5e7a(row[4]),used:false});
+}
+return data;
+}
+function _0x1a2b(_0xb2cd6, _0xc3de7, _0xd4ef8, _0xe5f09) {
+const _0x2934d=[];
+const bs=_0x7a8b(_0xb2cd6,_0xd4ef8,'Bank Statement',_0x2934d);
+const gl=_0x7a8b(_0xc3de7,_0xe5f09,'GL Account',_0x2934d);
+function aTol(amt, kw) { return kw>=4 ? Math.max(_0xd00c,amt*0.0005) : _0xd00c; }
+function _0x3a4b(_0x3a45e,_0x5c670,_0x4b56f,_0x6d781,_0x7e892,_0x8f9a3) {
+const _0x1823c=[];
+for (let i=0;i<_0x3a45e.length;i++) {
+if (_0x3a45e[i].used) continue;
+const sAmt=_0x3a45e[i][_0x5c670]; if (sAmt<_0xd00c) continue;
+for (let j=0;j<_0x4b56f.length;j++) {
+if (_0x4b56f[j].used) continue;
+const tAmt=_0x4b56f[j][_0x6d781];
+const kw=_0x9c0d(_0x4b56f[j].narr,_0x3a45e[i].narr);
+if (kw<_0x8f9a3) continue;
+if (Math.abs(tAmt-sAmt)>aTol(sAmt,kw)) continue;
+const dd=Math.abs(_0x3a45e[i].date-_0x4b56f[j].date)/86400000;
+if (!_0x7a9c(_0x3a45e[i].date,_0x4b56f[j].date)&&dd>_0x7e892) continue;
+_0x1823c.push({i,j,kw,dd,score:_0x1e2f(kw,dd)});
+}
+}
+_0x1823c.sort((a,b)=>b.score-a.score);
+return _0x1823c;
+}
+function _0xcffb(_0x1823c,_0x3a45e,_0x5c670,_0x4b56f,_0x6d781,out,pass) {
+const uS=new Set(),uT=new Set();
+for (const c of _0x1823c) {
+if (uS.has(c.i)||uT.has(c.j)) continue;
+const qual=c.kw>=4?'Strong Match (Ref#)':c.kw>=2?'Strong Match':c.kw>=1?'Keyword Match':'Amount & Date Match';
+out.push({
+bsDate:_0x8bad(_0x3a45e[c.i].date),bsAmt:_0x3a45e[c.i][_0x5c670],bsNarr:_0x3a45e[c.i].narr,
+glDate:_0x8bad(_0x4b56f[c.j].date),glAmt:_0x4b56f[c.j][_0x6d781],glNarr:_0x4b56f[c.j].narr,
+dateDiff:Math.round(c.dd),kwHits:c.kw,
+quality:qual+(pass?` [P${pass}]`:'')
+});
+uS.add(c.i); uT.add(c.j);
+_0x3a45e[c.i].used=true; _0x4b56f[c.j].used=true;
+}
+}
+function _0x5c6d(_0x3a45e,_0x5c670,_0x4b56f,_0x6d781,out) {
+for (let i=0;i<_0x3a45e.length;i++) {
+if (_0x3a45e[i].used) continue;
+const sAmt=_0x3a45e[i][_0x5c670]; if (sAmt<_0xd00c) continue;
+let found=false;
+for (let j=0;j<_0x4b56f.length&&!found;j++) {
+if (_0x4b56f[j].used) continue;
+const a1=_0x4b56f[j][_0x6d781]; if (a1>=sAmt||a1<_0xd00c) continue;
+for (let k=j+1;k<_0x4b56f.length&&!found;k++) {
+if (_0x4b56f[k].used) continue;
+const a2=_0x4b56f[k][_0x6d781];
+if (Math.abs(a1+a2-sAmt)>Math.max(_0xd00c,sAmt*0.001)) continue;
+const dd1=Math.abs(_0x3a45e[i].date-_0x4b56f[j].date)/86400000;
+const dd2=Math.abs(_0x3a45e[i].date-_0x4b56f[k].date)/86400000;
+if (dd1>14||dd2>14) continue;
+if (!_0x7a9c(_0x3a45e[i].date,_0x4b56f[j].date)&&dd1>7) continue;
+if (!_0x7a9c(_0x3a45e[i].date,_0x4b56f[k].date)&&dd2>7) continue;
+const kw1=_0x9c0d(_0x4b56f[j].narr,_0x3a45e[i].narr);
+const kw2=_0x9c0d(_0x4b56f[k].narr,_0x3a45e[i].narr);
+if (kw1+kw2<1) continue;
+[{r:_0x4b56f[j],a:a1,d:Math.round(dd1),kw:kw1},{r:_0x4b56f[k],a:a2,d:Math.round(dd2),kw:kw2}].forEach(x=>{
+out.push({bsDate:_0x8bad(_0x3a45e[i].date),bsAmt:x.a,bsNarr:_0x3a45e[i].narr+' [SPLIT]',
+glDate:_0x8bad(x.r.date),glAmt:x.a,glNarr:x.r.narr,dateDiff:x.d,kwHits:x.kw,quality:'Split Match'});
+});
+_0x3a45e[i].used=_0x4b56f[j].used=_0x4b56f[k].used=true; found=true;
+}
+}
+}
+}
+const _0xf60a1=[],_0x071b2=[];
+_0xcffb(_0x3a4b(bs,'dr',gl,'cr',_0xe11d,0),bs,'dr',gl,'cr',_0xf60a1,'');
+_0xcffb(_0x3a4b(bs,'dr',gl,'cr',14,1),      bs,'dr',gl,'cr',_0xf60a1,'2');
+_0xcffb(_0x3a4b(bs,'dr',gl,'cr',365,4),     bs,'dr',gl,'cr',_0xf60a1,'3');
+_0x5c6d(bs,'dr',gl,'cr',_0xf60a1);
+_0xcffb(_0x3a4b(bs,'cr',gl,'dr',_0xe11d,0),bs,'cr',gl,'dr',_0x071b2,'');
+_0xcffb(_0x3a4b(bs,'cr',gl,'dr',14,1),      bs,'cr',gl,'dr',_0x071b2,'2');
+_0xcffb(_0x3a4b(bs,'cr',gl,'dr',365,4),     bs,'cr',gl,'dr',_0x071b2,'3');
+_0x5c6d(bs,'cr',gl,'dr',_0x071b2);
+const _0xd4ef=[],_0xe5f0=[],_0xf601a=[],_0x0712b=[];
+for (const r of bs) {
+if (!r.used&&r.dr>=_0xd00c) _0xd4ef.push({date:_0x8bad(r.date),amt:r.dr,narr:r.narr});
+if (!r.used&&r.cr>=_0xd00c) _0xe5f0.push({date:_0x8bad(r.date),amt:r.cr,narr:r.narr});
+}
+for (const r of gl) {
+if (!r.used&&r.cr>=_0xd00c) _0xf601a.push({period:_0x9cbe(r.date),date:_0x8bad(r.date),amt:r.cr,narr:r.narr});
+if (!r.used&&r.dr>=_0xd00c) _0x0712b.push({period:_0x9cbe(r.date),date:_0x8bad(r.date),amt:r.dr,narr:r.narr});
+}
+const S=(a,k)=>a.reduce((t,r)=>t+r[k],0);
+const totMO=S(_0xf60a1,'bsAmt'),totMI=S(_0x071b2,'bsAmt');
+const totBD=S(_0xd4ef,'amt'),totBC=S(_0xe5f0,'amt');
+const totGC=S(_0xf601a,'amt'),totGD=S(_0x0712b,'amt');
+const bsCBrow=[...bs].reverse().find(r=>r.bal!==0);
+const bsCB=bsCBrow?bsCBrow.bal:(bs.length?bs[bs.length-1].bal:0);
+const glBals=gl.map(r=>r.bal).filter(b=>Math.abs(b)>0.005);
+const cashbookBal=glBals.length>0?glBals[glBals.length-1]:gl.reduce((s,r)=>s+r.dr-r.cr,0);
+const adjBal=Math.round((bsCB+totBD-totBC+totGD-totGC)*100)/100;
+const variance=Math.round((adjBal-cashbookBal)*100)/100;
+const ok=_0x2934d.filter(a=>a.comment==='PARSED OK').length;
+const fail=_0x2934d.filter(a=>a.comment==='PARSE FAILED').length;
+const gap=_0x2934d.filter(a=>a.comment.includes('LARGE DATE GAP')).length;
+return {
+summary:{
+bsN:bs.length,glN:gl.length,
+bsTotDr:Math.round(bs.reduce((s,r)=>s+r.dr,0)*100)/100,
+bsTotCr:Math.round(bs.reduce((s,r)=>s+r.cr,0)*100)/100,
+glTotDr:Math.round(gl.reduce((s,r)=>s+r.dr,0)*100)/100,
+glTotCr:Math.round(gl.reduce((s,r)=>s+r.cr,0)*100)/100,
+mOutN:_0xf60a1.length,mInN:_0x071b2.length,
+totMO,totMI,totBD,totBC,totGC,totGD,
+bsCB,adjBal,cashbookBal,variance,ok,fail,gap,
+integrity:fail===0?'PASS':'REVIEW',
+totalAudit:_0x2934d.length
+},
+_0xf60a1,_0x071b2,
+_0xd4ef,_0xe5f0,_0xf601a,_0x0712b,_0x2934d
+};
+}
+function _0x4d6f(file) {
+return new Promise((res,rej)=>{
+const fr=new FileReader();
+fr.onload=e=>{
+try {
+const wb=XLSX.read(new Uint8Array(e.target.result),{type:'array',cellDates:true,cellNF:false,cellText:false});
+const ws=wb.Sheets[wb.SheetNames[0]];
+res(XLSX.utils.sheet_to_json(ws,{header:1,defval:'',raw:true}));
+} catch(ex){rej(ex);}
+};
+fr.onerror=()=>rej(new Error('File read failed'));
+fr.readAsArrayBuffer(file);
+});
+}
+function _0x7e8f(d) {
+const wb=XLSX.utils.book_new();
+const s=d.summary; const ts=new Date().toISOString().slice(0,10);
+const N=n=>(n==null||isNaN(+n))?0:+n;
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   RECON SUMMARY SHEET — structured AOA layout matching PDF report format
+   Three columns: A = Label (wide), B = Value (numeric), C = Unit/Note
+   ═══════════════════════════════════════════════════════════════════════════ */
+(function(){
+  var vari=Math.round((N(s.adjBal)-N(s.cashbookBal))*100)/100;
+  var rec=Math.abs(vari)<0.01;
+  var aoa=[
+    /* 0  */ ['EIS BANK RECONCILIATION SUMMARY','',''],
+    /* 1  */ ['Elites Integrated Systems  \u00b7  Bank-to-GL Reconciliation Report','',''],
+    /* 2  */ ['Generated: '+ts+'    |    Developed by: Michael Felix Happy','',''],
+    /* 3  */ ['','',''],
+    /* 4  */ ['BANK STATEMENT','',''],
+    /* 5  */ ['  Total Transactions',s.bsN,'entries'],
+    /* 6  */ ['  Total Debit  (Outflows)',N(s.bsTotDr),'NGN'],
+    /* 7  */ ['  Total Credit (Inflows)',N(s.bsTotCr),'NGN'],
+    /* 8  */ ['','',''],
+    /* 9  */ ['GL ACCOUNT','',''],
+    /* 10 */ ['  Total GL Entries',s.glN,'entries'],
+    /* 11 */ ['  Total Debit  in GL',N(s.glTotDr),'NGN'],
+    /* 12 */ ['  Total Credit in GL',N(s.glTotCr),'NGN'],
+    /* 13 */ ['','',''],
+    /* 14 */ ['RECONCILIATION RESULTS','',''],
+    /* 15 */ ['  Matched Outflows  (BS Debit <-> GL Credit)',s.mOutN,'entries'],
+    /* 16 */ ['  Matched Outflows Amount',N(s.totMO),'NGN'],
+    /* 17 */ ['  Matched Inflows   (BS Credit <-> GL Debit)',s.mInN,'entries'],
+    /* 18 */ ['  Matched Inflows Amount',N(s.totMI),'NGN'],
+    /* 19 */ ['','',''],
+    /* 20 */ ['  Debit  in BS  NOT in GL',d._0xd4ef.length,'entries'],
+    /* 21 */ ['  Debit  in BS  NOT in GL  \u2014 Amount',N(s.totBD),'NGN'],
+    /* 22 */ ['  Credit in BS  NOT in GL',d._0xe5f0.length,'entries'],
+    /* 23 */ ['  Credit in BS  NOT in GL  \u2014 Amount',N(s.totBC),'NGN'],
+    /* 24 */ ['  Credit in GL  NOT in BS',d._0xf601a.length,'entries'],
+    /* 25 */ ['  Credit in GL  NOT in BS  \u2014 Amount',N(s.totGC),'NGN'],
+    /* 26 */ ['  Debit  in GL  NOT in BS',d._0x0712b.length,'entries'],
+    /* 27 */ ['  Debit  in GL  NOT in BS  \u2014 Amount',N(s.totGD),'NGN'],
+    /* 28 */ ['','',''],
+    /* 29 */ ['BALANCE RECONCILIATION STATEMENT','',''],
+    /* 30 */ ['  Bank Statement Closing Balance',N(s.bsCB),'NGN'],
+    /* 31 */ ['  Add:  Debit in BS not in GL  (bank charges not in books)',N(s.totBD),'NGN  (+)'],
+    /* 32 */ ['  Less: Credit in BS not in GL  (bank receipts not in books)',-N(s.totBC),'NGN  (-)'],
+    /* 33 */ ['  Add:  Debit in GL not in BS   (deposits in transit)',N(s.totGD),'NGN  (+)'],
+    /* 34 */ ['  Less: Credit in GL not in BS  (unpresented cheques)',-N(s.totGC),'NGN  (-)'],
+    /* 35 */ ['  ----------------------------------------------------------------','',''],
+    /* 36 */ ['  ADJUSTED BANK BALANCE',N(s.adjBal),'NGN'],
+    /* 37 */ ['','',''],
+    /* 38 */ ['  Cashbook Balance (GL Closing Balance)',N(s.cashbookBal),'NGN'],
+    /* 39 */ ['  ----------------------------------------------------------------','',''],
+    /* 40 */ [rec?'  RESULT:  RECONCILED \u2014 Zero Variance':'  RESULT:  VARIANCE DETECTED',rec?0:vari,rec?'':'NGN'],
+    /* 41 */ ['','',''],
+    /* 42 */ ['DATE INTEGRITY','',''],
+    /* 43 */ ['  Overall Result',s.integrity,''],
+    /* 44 */ ['  Dates Parsed OK',s.ok,'rows'],
+    /* 45 */ ['  Parse Failures',s.fail,'rows'],
+    /* 46 */ ['  Date Gaps Noted',s.gap||0,'flags'],
+    /* 47 */ ['  Total Date Entries Audited',(s.totalAudit||(s.ok+s.fail)),'rows'],
+    /* 48 */ ['','',''],
+    /* 49 */ ['System: EIS Financial Tools  |  IBRAP  |  v4.1  |  All rights reserved','',''],
+  ];
+
+  var ws=XLSX.utils.aoa_to_sheet(aoa);
+
+  /* Column widths */
+  ws['!cols']=[{wch:58},{wch:22},{wch:14}];
+
+  /* Merge A:C for title/section-header rows so they read as full-width headings */
+  ws['!merges']=[0,1,2,4,9,14,29,42,49].map(function(r){
+    return {s:{r:r,c:0},e:{r:r,c:2}};
+  });
+
+  /* Number formats: currency (#,##0.00) and integer (#,##0) for col B */
+  var numC='#,##0.00', numI='#,##0';
+  var currencyRows=[6,7,11,12,16,18,21,23,25,27,30,31,32,33,34,36,38,40];
+  var intRows=[5,10,15,17,20,22,24,26,44,45,46,47];
+  function ea(r){return XLSX.utils.encode_cell({r:r,c:1});}
+  currencyRows.forEach(function(r){var a=ea(r);if(ws[a]&&ws[a].t==='n')ws[a].z=numC;});
+  intRows.forEach(function(r){var a=ea(r);if(ws[a]&&ws[a].t==='n')ws[a].z=numI;});
+
+  XLSX.utils.book_append_sheet(wb,ws,'Recon Summary');
+})();
+
+/* ─── remaining sheets (unchanged) ──────────────────────────────────────── */
+function sht(name,rows,widths) {
+const ws=XLSX.utils.json_to_sheet(rows.length?rows:[{'':' No entries'}]);
+if (widths) ws['!cols']=widths.map(w=>({wch:w}));
+XLSX.utils.book_append_sheet(wb,ws,name);
+}
+const moR=d._0xf60a1.map((r,i)=>({'#':i+1,'BS Date':r.bsDate,'BS Amount (₦)':N(r.bsAmt),'BS Narration':r.bsNarr,'GL Date':r.glDate,'GL Amount (₦)':N(r.glAmt),'GL Description':r.glNarr,'Days Diff':r.dateDiff,'KW Hits':r.kwHits,'Match Quality':r.quality}));
+if (moR.length) moR.push({'#':'','BS Date':'TOTAL','BS Amount (₦)':N(s.totMO),'BS Narration':'','GL Date':'','GL Amount (₦)':N(s.totMO),'GL Description':'','Days Diff':'','KW Hits':'','Match Quality':''});
+sht('Matched Outflows',moR,[4,13,16,38,13,16,38,9,8,20]);
+const miR=d._0x071b2.map((r,i)=>({'#':i+1,'BS Date':r.bsDate,'BS Amount (₦)':N(r.bsAmt),'BS Narration':r.bsNarr,'GL Date':r.glDate,'GL Amount (₦)':N(r.glAmt),'GL Description':r.glNarr,'Days Diff':r.dateDiff,'KW Hits':r.kwHits,'Match Quality':r.quality}));
+if (miR.length) miR.push({'#':'','BS Date':'TOTAL','BS Amount (₦)':N(s.totMI),'BS Narration':'','GL Date':'','GL Amount (₦)':N(s.totMI),'GL Description':'','Days Diff':'','KW Hits':'','Match Quality':''});
+sht('Matched Inflows',miR,[4,13,16,38,13,16,38,9,8,20]);
+const bs4=(arr,tot,nm)=>{
+const rows=arr.map((r,i)=>({'#':i+1,'Date':r.date,'Amount (₦)':N(r.amt),'Narration':r.narr}));
+if (rows.length) rows.push({'#':'','Date':'TOTAL','Amount (₦)':N(tot),'Narration':''});
+sht(nm,rows,[4,14,18,46]);
+};
+bs4(d._0xd4ef,s.totBD,'BS Debit Not in GL');
+bs4(d._0xe5f0,s.totBC,'BS Credit Not in GL');
+const gl6=(arr,tot,nm)=>{
+const rows=arr.map((r,i)=>({'#':i+1,'Period':r.period,'GL Date':r.date,'Amount (₦)':N(r.amt),'GL Description':r.narr,'Remarks':''}));
+if (rows.length) rows.push({'#':'','Period':'','GL Date':'TOTAL','Amount (₦)':N(tot),'GL Description':'','Remarks':''});
+sht(nm,rows,[4,12,14,18,44,14]);
+};
+gl6(d._0xf601a,s.totGC,'GL Credit Not in BS');
+gl6(d._0x0712b,s.totGD,'GL Debit Not in BS');
+const auR=d._0x2934d.map(a=>({'Sheet':a.sheet,'Row':a.row,'Original Value':a.original,'Parsed Date':a.parsed||'—','Comment':a.comment}));
+sht('Date Audit Log',auR.length?auR:[{'Sheet':'No data','Row':'','Original Value':'','Parsed Date':'','Comment':''}],[16,6,22,14,28]);
+XLSX.writeFile(wb,`EIS-BankRecon-${ts}.xlsx`);
+}
+function _0x9a0b(d) {
+const {jsPDF}=window.jspdf;
+const doc=new jsPDF({orientation:'landscape',unit:'pt',format:'a4'});
+const s=d.summary; const ts=new Date().toISOString().slice(0,10);
+const W=doc.internal.pageSize.getWidth();
+const fN=n=>n==null?'0.00':Number(n).toLocaleString('en-NG',{minimumFractionDigits:2,maximumFractionDigits:2});
+let y=0;
+const ph=title=>{
+if(y>0) doc.addPage();
+doc.setFillColor(10,22,40); doc.rect(0,0,W,48,'F');
+doc.setFillColor(0,201,167); doc.rect(0,0,6,48,'F');
+doc.setFont('helvetica','bold'); doc.setFontSize(15); doc.setTextColor(232,237,245);
+doc.text('EIS Bank Recon',22,30);
+doc.setFont('helvetica','normal'); doc.setFontSize(11); doc.setTextColor(143,163,191);
+doc.text(title,22,43);
+doc.setFontSize(9); doc.text(`Generated: ${ts}`,W-20,30,{align:'right'});
+y=68;
+};
+const kv=(l,v,c)=>{
+doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(143,163,191); doc.text(l,26,y);
+doc.setFont('helvetica','bold'); doc.setTextColor(...(c||[232,237,245])); doc.text(String(v),W-20,y,{align:'right'}); y+=14;
+};
+const sl=t=>{doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(0,201,167);doc.text(t.toUpperCase(),20,y);y+=14;};
+const dv=()=>{doc.setDrawColor(22,39,71);doc.setLineWidth(0.5);doc.line(20,y,W-20,y);y+=10;};
+ph('Reconciliation Summary');
+const ip=s.integrity==='PASS';
+doc.setFillColor(ip?34:245,ip?197:166,ip?94:35,30);
+doc.roundedRect(W-145,y-13,125,18,4,4,'F');
+doc.setFont('helvetica','bold'); doc.setFontSize(8.5);
+doc.setTextColor(ip?34:245,ip?197:166,ip?94:35);
+doc.text(`DATE INTEGRITY: ${s.integrity}`,W-82,y-1,{align:'center'}); y+=8;
+sl('Bank Statement');
+kv('Total Transactions',s.bsN); kv('Total Debit (Outflows)','₦'+fN(s.bsTotDr)); kv('Total Credit (Inflows)','₦'+fN(s.bsTotCr)); dv();
+sl('Bank GL');
+kv('Total GL Entries',s.glN); kv('Total Debit in GLs','₦'+fN(s.glTotDr)); kv('Total Credit in GLs','₦'+fN(s.glTotCr)); dv();
+sl('Reconciliation Results');
+kv('Matched Outflows (BS Debit ↔ GL Credit)',s.mOutN,[0,201,167]);
+kv('Matched Outflows Amount','₦'+fN(s.totMO),[0,201,167]);
+kv('Matched Inflows (BS Credit ↔ GL Debit)',s.mInN,[34,197,94]);
+kv('Matched Inflows Amount','₦'+fN(s.totMI),[34,197,94]);
+kv('Debit in BS NOT in GL',d._0xd4ef.length,[245,166,35]);
+kv('Debit in BS NOT in GL Amount','₦'+fN(s.totBD),[245,166,35]);
+kv('Credit in BS NOT in GL',d._0xe5f0.length,[245,166,35]);
+kv('Credit in BS NOT in GL Amount','₦'+fN(s.totBC),[245,166,35]);
+kv('Credit in GL NOT in BS',d._0xf601a.length,[245,166,35]);
+kv('Credit in GL NOT in BS Amount','₦'+fN(s.totGC),[245,166,35]);
+kv('Debit in GL NOT in BS',d._0x0712b.length,[245,166,35]);
+kv('Debit in GL NOT in BS Amount','₦'+fN(s.totGD),[245,166,35]);
+dv();
+sl('Balance Reconciliation Statement');
+kv('Bank Statement Closing Balance','₦'+fN(s.bsCB));
+kv('Add: Debit in BS not in GL','₦'+fN(s.totBD),[34,197,94]);
+kv('Less: Credit in BS not in GL','(₦'+fN(s.totBC)+')',[224,82,82]);
+kv('Add: Debit in GL not in BS','₦'+fN(s.totGD),[34,197,94]);
+kv('Less: Credit in GL not in BS','(₦'+fN(s.totGC)+')',[224,82,82]);
+y+=4; doc.setFillColor(22,39,71); doc.roundedRect(18,y-13,W-36,22,3,3,'F');
+doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(0,201,167);
+doc.text('ADJUSTED BANK BALANCE',26,y); doc.text('₦'+fN(s.adjBal),W-26,y,{align:'right'}); y+=18;
+doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(143,163,191);
+doc.text('Cashbook Balance',26,y);
+doc.setFont('helvetica','bold'); doc.setTextColor(232,237,245);
+doc.text('₦'+fN(s.cashbookBal),W-20,y,{align:'right'}); y+=16;
+const vari=s.variance!=null?s.variance:Math.round((s.adjBal-s.cashbookBal)*100)/100;
+const rec=Math.abs(vari)<0.01;
+const vcol=rec?[34,197,94]:[224,82,82];
+y+=4;
+doc.setFillColor(vcol[0],vcol[1],vcol[2]);
+doc.roundedRect(18,y-13,W-36,22,3,3,'F');
+doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(10,22,40);
+doc.text(rec?'✓  RECONCILED':'✗  VARIANCE',26,y);
+doc.text(rec?'₦0.00':'₦'+fN(vari),W-26,y,{align:'right'});
+y+=24; dv();
+sl('Date Parsing'); kv('Dates Parsed OK',s.ok,[34,197,94]); if(s.fail) kv('Parse Failures',s.fail,[224,82,82]);
+doc.setFont('helvetica','italic'); doc.setFontSize(8); doc.setTextColor(74,96,128);
+doc.text('Developed by Michael Felix Happy',W/2,doc.internal.pageSize.getHeight()-14,{align:'center'});
+const aTbl=(rows,tot,title,hcol,heads,bdy)=>{
+if(!rows.length) return;
+ph(title);
+doc.autoTable({startY:y,margin:{left:20,right:20},
+head:[heads],
+body:[...rows.map((r,i)=>[i+1,...bdy(r)]),['','TOTAL',...heads.slice(2).map((_,k)=>k===0?fN(tot):'')]],
+headStyles:{fillColor:[10,22,40],textColor:hcol,fontSize:8,fontStyle:'bold'},
+bodyStyles:{fontSize:7.5,textColor:[200,210,230]},
+alternateRowStyles:{fillColor:[15,31,61]},
+styles:{fillColor:[10,22,40],lineColor:[255,255,255,15],lineWidth:0.3},
+didParseCell:c=>{if(c.row.index===c.table.body.length-1){c.cell.styles.fontStyle='bold';c.cell.styles.textColor=hcol;}}
+});
+};
+aTbl(d._0xf60a1,s.totMO,'Matched Outflows — BS Debit ↔ GL Credit',[0,201,167],
+['#','BS Date','BS Amount (₦)','BS Narration','GL Date','GL Amount (₦)','GL Description','Days','Quality'],
+r=>[r.bsDate,fN(r.bsAmt),r.bsNarr,r.glDate,fN(r.glAmt),r.glNarr,r.dateDiff,r.quality]);
+aTbl(d._0x071b2,s.totMI,'Matched Inflows — BS Credit ↔ GL Debit',[34,197,94],
+['#','BS Date','BS Amount (₦)','BS Narration','GL Date','GL Amount (₦)','GL Description','Days','Quality'],
+r=>[r.bsDate,fN(r.bsAmt),r.bsNarr,r.glDate,fN(r.glAmt),r.glNarr,r.dateDiff,r.quality]);
+aTbl(d._0xd4ef,s.totBD,'BS Debit Not in GL',[245,166,35],['#','Date','Amount (₦)','Narration'],r=>[r.date,fN(r.amt),r.narr]);
+aTbl(d._0xe5f0,s.totBC,'BS Credit Not in GL',[245,166,35],['#','Date','Amount (₦)','Narration'],r=>[r.date,fN(r.amt),r.narr]);
+aTbl(d._0xf601a,s.totGC,'GL Credit Not in BS',[99,179,237],['#','Period','GL Date','Amount (₦)','GL Description'],r=>[r.period,r.date,fN(r.amt),r.narr]);
+aTbl(d._0x0712b,s.totGD,'GL Debit Not in BS',[99,179,237],['#','Period','GL Date','Amount (₦)','GL Description'],r=>[r.period,r.date,fN(r.amt),r.narr]);
+const iss=d._0x2934d.filter(a=>a.comment!=='PARSED OK');
+if(iss.length){
+ph('Date Audit Log');
+doc.autoTable({startY:y,margin:{left:20,right:20},
+head:[['Sheet','Row','Original Value','Parsed Date','Comment']],
+body:iss.map(a=>[a.sheet,a.row,a.original,a.parsed||'—',a.comment]),
+headStyles:{fillColor:[10,22,40],textColor:[245,166,35],fontSize:8,fontStyle:'bold'},
+bodyStyles:{fontSize:8,textColor:[200,210,230]},
+alternateRowStyles:{fillColor:[15,31,61]},
+styles:{fillColor:[10,22,40],lineColor:[255,255,255,15],lineWidth:0.3}});
+}
+doc.save(`EIS-BankRecon-${ts}.pdf`);
+}
+const _0xST__={bsFile:null,_0xb2cd6:[],glFile:null,_0xc3de7:[],result:null};
+const $=id=>document.getElementById(id);
+const fN=n=>n==null||isNaN(n)?'—':Number(n).toLocaleString('en-NG',{minimumFractionDigits:2,maximumFractionDigits:2});
+function _0xadcf(n){
+[1,2,3].forEach(i=>{
+$(`s${i}`).className='si'+(i<n?' dn':i===n?' act':'');
+const p=$(`p${i}`);
+if(i===n){p.classList.add('on');p.classList.add('ani');}else p.classList.remove('on');
+});
+[1,2].forEach(i=>$(`l${i}`).className='sl'+(i<n?' dn':''));
+}
+function _0xbeda(m){const e=$('err');e.textContent=m;e.classList.add('on');setTimeout(()=>e.classList.remove('on'),9000);}
+function _0xcfeb(t){$('stx').textContent=t;}
+function _0x3c5e(rows,wid){
+const sl=rows.slice(0,6);
+let h=`<div class="pscr"><div class="plb">Preview — ${sl.length} of ${rows.length} rows</div>
+<table><thead><tr><th>Date</th><th>Narration</th><th>DR</th><th>CR</th><th>Balance</th></tr></thead><tbody>`;
+for(const r of sl) h+=`<tr>${[0,1,2,3,4].map(c=>`<td class="${c>=2?'nm':c===1?'nr':''}">${r[c]??''}</td>`).join('')}</tr>`;
+h+='</tbody></table></div>';
+$(wid).innerHTML=h;
+}
+async function _0x2b4d(file,w){
+const isBS=w==='b';
+const box=$(isBS?'bb':'gb'),nm=$(isBS?'bn':'gn'),cnt=$(isBS?'bc':'gc');
+nm.textContent='⏳ Reading...'; cnt.textContent=''; box.classList.add('ok');
+try{
+const raw=await _0x4d6f(file);
+if(isBS){_0xST__.bsFile=file;_0xST__._0xb2cd6=raw;}else{_0xST__.glFile=file;_0xST__._0xc3de7=raw;}
+nm.textContent=file.name;
+cnt.textContent=`${raw.length} rows read — data auto-detected from first date row`;
+_0x3c5e(raw,isBS?'bpv':'gpv');
+}catch(e){
+nm.textContent='⚠ '+e.message; box.classList.remove('ok');
+if(isBS){_0xST__.bsFile=null;_0xST__._0xb2cd6=[];}else{_0xST__.glFile=null;_0xST__._0xc3de7=[];}
+}
+$('nxt').disabled=!(_0xST__.bsFile&&_0xST__.glFile);
+}
+$('bi').addEventListener('change',e=>_0x2b4d(e.target.files[0],'b'));
+$('gi').addEventListener('change',e=>_0x2b4d(e.target.files[0],'g'));
+['bb','gb'].forEach(id=>{
+const bx=$(id),w=id==='bb'?'b':'g';
+bx.addEventListener('dragover',e=>{e.preventDefault();bx.classList.add('drag');});
+bx.addEventListener('dragleave',()=>bx.classList.remove('drag'));
+bx.addEventListener('drop',e=>{e.preventDefault();bx.classList.remove('drag');if(e.dataTransfer.files[0])_0x2b4d(e.dataTransfer.files[0],w);});
+});
+$('nxt').addEventListener('click',()=>_0xadcf(2));
+$('bk').addEventListener('click',()=>_0xadcf(1));
+$('run').addEventListener('click',async()=>{
+if(!_0xST__.bsFile||!_0xST__.glFile) return;
+const ld=$('ld'),lm=$('ldm');
+const msgs=['Parsing date columns...','Normalising amounts...','Running fuzzy match engine...','Building result tables...'];
+let mi=0; ld.classList.add('on'); lm.textContent=msgs[0];
+const tk=setInterval(()=>{mi=(mi+1)%msgs.length;lm.textContent=msgs[mi];},850);
+_0xcfeb('Processing...');
+try{
+await new Promise(r=>setTimeout(r,80));
+const result=_0x1a2b(_0xST__._0xb2cd6,_0xST__._0xc3de7,$('bf').value,$('gf').value);
+_0xST__.result=result;
+_0x1c2d(result);
+_0xadcf(3); _0xcfeb('Complete');
+}catch(e){
+_0xbeda('Error: '+e.message); _0xcfeb('Error');
+}finally{
+clearInterval(tk); ld.classList.remove('on');
+}
+});
+$('bnw').addEventListener('click',()=>{
+_0xST__.bsFile=_0xST__.glFile=_0xST__.result=null; _0xST__._0xb2cd6=_0xST__._0xc3de7=[];
+['bb','gb'].forEach(id=>$(id).classList.remove('ok','drag'));
+['bn','gn','bc','gc'].forEach(id=>$(id).textContent='');
+['bpv','gpv'].forEach(id=>$(id).innerHTML='');
+$('nxt').disabled=true; $('res').style.display='none';
+_0xadcf(1); _0xcfeb('EIS Bank Recon — Ready');
+});
+$('bca').addEventListener('click',e=>{e.stopPropagation();$('dmn').classList.toggle('op');});
+document.addEventListener('click',()=>$('dmn').classList.remove('op'));
+$('bxl').addEventListener('click',()=>{if(_0xST__.result)_0x7e8f(_0xST__.result);});
+$('mxl').addEventListener('click',()=>{$('dmn').classList.remove('op');if(_0xST__.result)_0x7e8f(_0xST__.result);});
+$('mpd').addEventListener('click',()=>{$('dmn').classList.remove('op');if(_0xST__.result)_0x9a0b(_0xST__.result);});
+document.querySelectorAll('.tb').forEach(b=>{
+b.addEventListener('click',()=>{
+document.querySelectorAll('.tb').forEach(x=>x.classList.remove('on'));
+document.querySelectorAll('.tp').forEach(x=>x.classList.remove('on'));
+b.classList.add('on'); $(`t-${b.dataset.t}`).classList.add('on');
+});
+});
+function _0x1c2d(d){
+const s=d.summary;
+$('res').style.display='block';
+$('ibg').className=`ib2 ${s.integrity==='PASS'?'ps':'rv'}`;
+$('ibg').innerHTML=`<div class="id"></div>DATE INTEGRITY: ${s.integrity}`;
+$('rmeta').textContent=`BS: ${_0xST__.bsFile.name}  ·  GL: ${_0xST__.glFile.name}`;
+$('mgr').innerHTML=[
+{l:'BS Transaction Count',v:`Total: ${s.bsN}`,c:'',ac:false,sub:`DR: ${d._0xd4ef.length+s.mOutN} | CR: ${d._0xe5f0.length+s.mInN}`},
+{l:'GL Entries Count',v:`Total: ${s.glN}`,c:'',ac:false,sub:`DR: ${d._0x0712b.length+s.mInN} | CR: ${d._0xf601a.length+s.mOutN}`},
+{l:'Total BS Outflows',v:`₦${fN(s.bsTotDr)}`,c:'',ac:false},
+{l:'Total BS Inflows',v:`₦${fN(s.bsTotCr)}`,c:'',ac:false},
+{l:'Total GL Debits',v:`₦${fN(s.glTotDr)}`,c:'',ac:false},
+{l:'Total GL Credits',v:`₦${fN(s.glTotCr)}`,c:'',ac:false},
+{l:'Matched Outflows',v:s.mOutN,c:'tl',ac:true,sub:`₦${fN(s.totMO)}`},
+{l:'Matched Inflows',v:s.mInN,c:'gn',ac:false,sub:`₦${fN(s.totMI)}`},
+{l:'BS Debit Not in GL',v:d._0xd4ef.length,c:'am',ac:false,sub:`₦${fN(s.totBD)}`},
+{l:'BS Credit Not in GL',v:d._0xe5f0.length,c:'am',ac:false,sub:`₦${fN(s.totBC)}`},
+{l:'GL Credit Not in BS',v:d._0xf601a.length,c:d._0xf601a.length?'am':'',ac:false,sub:`₦${fN(s.totGC)}`},
+{l:'GL Debit Not in BS',v:d._0x0712b.length,c:d._0x0712b.length?'am':'',ac:false,sub:`₦${fN(s.totGD)}`}
+].map(m=>`<div class="mc${m.ac?' ac':''}"><div class="ml">${m.l}</div>${m.v?`<div class="mv ${m.c}">${m.v}</div>`:''}<div class="ms">${m.sub||''}</div></div>`).join('');
+_0x3e4f(s);
+_0x5a6b('t-out',d._0xf60a1,s.totMO,true);
+_0x5a6b('t-inf',d._0x071b2,s.totMI,false);
+_0x7c8d('t-bsd',d._0xd4ef,s.totBD,'These are amounts the bank has debited with no corresponding credit entry in the GL. Common causes: bank charges, NIP fees, third-party debits or missed postings.');
+_0x7c8d('t-bsc',d._0xe5f0,s.totBC,'These are amounts credited into your bank account not yet recorded in the GL. Investigate and post the missing receipt entries.');
+_0x9e0f('t-glc',d._0xf601a,s.totGC,'Payments recorded in the GL as credits but not yet on the bank statement — in-transit items or timing differences. Follow up with the bank.');
+_0x9e0f('t-gld',d._0x0712b,s.totGD,'Receipts recorded in the GL as debits not yet on bank statement — cheques in clearing or pending reversals.');
+_0x1a3c(d._0x2934d,s);
+}
+function _0x3e4f(s){
+const vari=s.variance!=null?s.variance:Math.round((s.adjBal-s.cashbookBal)*100)/100;
+const rec=Math.abs(vari)<0.01;
+const variClass=rec?'ps2':'ng';
+const variLabel=rec?'✓ RECONCILED':'✗ VARIANCE';
+$('t-sum').innerHTML=`
+<div class="stl">Balance reconciliation statement</div>
+<div class="rb"><table>
+<tr><td class="la2">Bank Statement Closing Balance</td><td class="va">₦${fN(s.bsCB)}</td></tr>
+<tr><td class="la2">Add: Debit in BS not in GL (bank charges not in books)</td><td class="va ps2">₦${fN(s.totBD)}</td></tr>
+<tr><td class="la2">Less: Credit in BS not in GL (bank receipts not in books)</td><td class="va ng">(₦${fN(s.totBC)})</td></tr>
+<tr><td class="la2">Add: Debit in GL not in BS (deposits in transit)</td><td class="va ps2">₦${fN(s.totGD)}</td></tr>
+<tr><td class="la2">Less: Credit in GL not in BS (unpresented cheques)</td><td class="va ng">(₦${fN(s.totGC)})</td></tr>
+<tr class="tt"><td style="font-family:var(--di);font-size:14px;font-weight:700">Adjusted Bank Balance</td><td class="va tl" style="font-size:16px">₦${fN(s.adjBal)}</td></tr>
+<tr><td class="la2" style="font-weight:600;color:var(--tx)">Cashbook Balance</td><td class="va" style="font-weight:600">₦${fN(s.cashbookBal)}</td></tr>
+<tr class="tt" style="${rec?'background:rgba(34,197,94,.08);border-top:1px solid rgba(34,197,94,.25)':'background:rgba(224,82,82,.08);border-top:1px solid rgba(224,82,82,.2)'}">
+<td style="font-family:var(--di);font-size:14px;font-weight:700">${variLabel}</td>
+<td class="va ${variClass}" style="font-size:16px">${rec?'₦0.00':'₦'+fN(vari)}</td>
+</tr>
+</table></div>
+<div class="tg">
+<div class="mc"><div class="ml">Total BS Outflows</div><div class="mv" style="font-size:16px">₦${fN(s.bsTotDr)}</div></div>
+<div class="mc"><div class="ml">Total BS Inflows</div><div class="mv" style="font-size:16px">₦${fN(s.bsTotCr)}</div></div>
+<div class="mc"><div class="ml">Total GL Debits</div><div class="mv" style="font-size:16px">₦${fN(s.glTotDr)}</div></div>
+<div class="mc"><div class="ml">Total GL Credits</div><div class="mv" style="font-size:16px">₦${fN(s.glTotCr)}</div></div>
+</div>`;
+}
+function _0x5a6b(id,data,tot,isOut){
+if(!data.length){$(id).innerHTML=_0x2561(`No matched ${isOut?'outflow':'inflow'} entries`);return;}
+let h=`<div class="tw"><table><thead><tr><th>#</th><th>BS Date</th><th>BS Amount (₦)</th><th>BS Narration</th><th>GL Date</th><th>GL Amount (₦)</th><th>GL Description</th><th>Days</th><th>KW</th><th>Quality</th></tr></thead><tbody>`;
+data.forEach((r,i)=>{
+const q=r.kwHits>=1?`<span class="pl pt">Strong Match</span>`:`<span class="pl pb">Amt & Date</span>`;
+h+=`<tr class="trm"><td style="color:var(--tx3)">${i+1}</td><td style="font-family:var(--mo);font-size:11px">${r.bsDate}</td><td class="nm">₦${fN(r.bsAmt)}</td><td class="nr" title="${r.bsNarr}">${r.bsNarr}</td><td style="font-family:var(--mo);font-size:11px">${r.glDate}</td><td class="nm">₦${fN(r.glAmt)}</td><td class="nr" title="${r.glNarr}">${r.glNarr}</td><td class="nm">${r.dateDiff}</td><td class="nm">${r.kwHits}</td><td>${q}</td></tr>`;
+});
+h+=`<tr class="trt"><td colspan="2" style="text-align:right;color:var(--tx3)">TOTAL</td><td class="nm">₦${fN(tot)}</td><td colspan="7"></td></tr></tbody></table></div>`;
+$(id).innerHTML=h;
+}
+function _0x7c8d(id,data,tot,note){
+if(!data.length){$(id).innerHTML=_0x2561('No entries in this category');return;}
+let h=`<div class="nt">${note}</div><div class="tw"><table><thead><tr><th>#</th><th>Date</th><th>Amount (₦)</th><th>Narration / Remarks</th></tr></thead><tbody>`;
+data.forEach((r,i)=>{h+=`<tr class="tru"><td style="color:var(--tx3)">${i+1}</td><td style="font-family:var(--mo);font-size:11px">${r.date}</td><td class="nm">₦${fN(r.amt)}</td><td class="nr" title="${r.narr}">${r.narr}</td></tr>`;});
+h+=`<tr class="trt"><td colspan="2" style="text-align:right;color:var(--tx3)">TOTAL</td><td class="nm">₦${fN(tot)}</td><td></td></tr></tbody></table></div>`;
+$(id).innerHTML=h;
+}
+function _0x9e0f(id,data,tot,note){
+if(!data.length){$(id).innerHTML=_0x2561('No entries in this category');return;}
+let h=`<div class="nt">${note}</div><div class="tw"><table><thead><tr><th>#</th><th>Period</th><th>GL Date</th><th>Amount (₦)</th><th>GL Description</th></tr></thead><tbody>`;
+data.forEach((r,i)=>{h+=`<tr class="tru"><td style="color:var(--tx3)">${i+1}</td><td style="font-family:var(--mo);font-size:11px">${r.period}</td><td style="font-family:var(--mo);font-size:11px">${r.date}</td><td class="nm">₦${fN(r.amt)}</td><td class="nr" title="${r.narr}">${r.narr}</td></tr>`;});
+h+=`<tr class="trt"><td colspan="3" style="text-align:right;color:var(--tx3)">TOTAL</td><td class="nm">₦${fN(tot)}</td><td></td></tr></tbody></table></div>`;
+$(id).innerHTML=h;
+}
+function _0x1a3c(_0x2934d,s){
+const iss=_0x2934d.filter(a=>a.comment!=='PARSED OK');
+let h=`<div class="bg">
+<span class="pl pb">Total: ${_0x2934d.length}</span>
+<span class="pl pg">OK: ${s.ok}</span>
+${s.fail?`<span class="pl pr">Failed: ${s.fail}</span>`:''}
+${s.gap?`<span class="pl pa">Date gaps noted: ${s.gap}</span>`:''}
+</div>`;
+if(!iss.length){$('t-aud').innerHTML=h+_0x2561('All dates parsed cleanly — no issues to review');return;}
+h+=`<div class="tw"><table><thead><tr><th>Sheet</th><th>Row</th><th>Original Value</th><th>Parsed Date</th><th>Status</th></tr></thead><tbody>`;
+for(const a of iss.slice(0,500)){
+const pc=a.comment.includes('FAILED')?'pr':a.comment.includes('GAP')?'pa':'pg';
+h+=`<tr><td>${a.sheet}</td><td style="font-family:var(--mo)">${a.row}</td><td style="font-family:var(--mo);font-size:11px">${a.original}</td><td style="font-family:var(--mo);font-size:11px">${a.parsed||'—'}</td><td><span class="pl ${pc}">${a.comment}</span></td></tr>`;
+}
+h+='</tbody></table></div>';
+$('t-aud').innerHTML=h;
+}
+function _0x2561(m){return`<div class="ep"><div class="ei">✓</div>${m}</div>`;}
+document.getElementById('yr').textContent=new Date().getFullYear();
+_0x3a45.focus();
+
+// ── BACKEND WAKE-UP PING ───────────────────────────────────
+(function(){
+  fetch('https://eis-recbackend.onrender.com/health')
+    .catch(function(){});
+})();
+
+// ── SIGNUP / CONFIRM / SET-PASSWORD FLOW ──────────────────
+(function(){
+  var API='https://eis-recbackend.onrender.com/api/auth';
+
+  function showCard(id){
+    ['login-card','signup-card','setpwd-card'].forEach(function(c){
+      var el=document.getElementById(c);
+      if(el) el.style.display=(c===id?'block':'none');
+    });
+  }
+
+  // Toggle between login and signup
+  var showSignup=document.getElementById('show-signup');
+  var showLogin=document.getElementById('show-login');
+  if(showSignup) showSignup.addEventListener('click',function(){showCard('signup-card');});
+  if(showLogin)  showLogin.addEventListener('click',function(){showCard('login-card');});
+
+  // ── SIGNUP SUBMIT ──────────────────────────────────────
+  var signupBtn=document.getElementById('signup-btn');
+  if(signupBtn){
+    signupBtn.addEventListener('click',async function(){
+      var errEl=document.getElementById('signup-err');
+      var okEl=document.getElementById('signup-success');
+      errEl.style.display='none'; okEl.style.display='none';
+
+      var sur=document.getElementById('su-surname').value.trim();
+      var oth=document.getElementById('su-othernames').value.trim();
+      var eml=document.getElementById('su-email').value.trim();
+      var ph=document.getElementById('su-phone').value.trim();
+
+      if(!sur||!oth||!eml||!ph){
+        errEl.textContent='⚠ Please fill in all fields.';
+        errEl.style.display='block'; return;
+      }
+      if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(eml)){
+        errEl.textContent='⚠ Please enter a valid email address.';
+        errEl.style.display='block'; return;
+      }
+
+      signupBtn.classList.add('loading'); signupBtn.disabled=true;
+      try{
+        var res=await fetch(API+'/signup',{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({surname:sur,otherNames:oth,email:eml,phone:ph})
+        });
+        var data=await res.json();
+        if(!res.ok) throw new Error(data.error||'Signup failed.');
+        okEl.textContent='✓ '+data.message;
+        okEl.style.display='block';
+        document.getElementById('su-surname').value='';
+        document.getElementById('su-othernames').value='';
+        document.getElementById('su-email').value='';
+        document.getElementById('su-phone').value='';
+      }catch(e){
+        errEl.textContent='⚠ '+e.message;
+        errEl.style.display='block';
+      }finally{
+        signupBtn.classList.remove('loading'); signupBtn.disabled=false;
+      }
+    });
+  }
+
+  // ── CHECK FOR CONFIRM TOKEN IN URL ─────────────────────
+  (async function(){
+    var params=new URLSearchParams(window.location.search);
+    var token=params.get('confirm');
+    if(!token) return;
+
+    // Show set-password card immediately
+    showCard('setpwd-card');
+    var errEl=document.getElementById('setpwd-err');
+    var btn=document.getElementById('setpwd-btn');
+
+    try{
+      var res=await fetch(API+'/confirm/'+token);
+      var data=await res.json();
+      if(!res.ok) throw new Error(data.error||'Invalid or expired link.');
+      document.getElementById('setpwd-greeting').textContent=
+        'Welcome, '+data.otherNames+' '+data.surname+'! Please create your password.';
+      document.getElementById('setpwd-card').dataset.confirmToken=token;
+    }catch(e){
+      errEl.textContent='⚠ '+e.message;
+      errEl.style.display='block';
+      btn.disabled=true;
+    }
+  })();
+
+  // ── SET PASSWORD SUBMIT ────────────────────────────────
+  var setpwdBtn=document.getElementById('setpwd-btn');
+  if(setpwdBtn){
+    setpwdBtn.addEventListener('click',async function(){
+      var errEl=document.getElementById('setpwd-err');
+      var okEl=document.getElementById('setpwd-success');
+      errEl.style.display='none'; okEl.style.display='none';
+
+      var pwd=document.getElementById('sp-password').value;
+      var cpwd=document.getElementById('sp-confirm').value;
+      var tok=document.getElementById('setpwd-card').dataset.confirmToken;
+
+      if(!tok){
+        errEl.textContent='⚠ Invalid session. Please use your confirmation email link.';
+        errEl.style.display='block'; return;
+      }
+      if(pwd.length<8){
+        errEl.textContent='⚠ Password must be at least 8 characters.';
+        errEl.style.display='block'; return;
+      }
+      if(pwd!==cpwd){
+        errEl.textContent='⚠ Passwords do not match. Please try again.';
+        errEl.style.display='block'; return;
+      }
+
+      setpwdBtn.classList.add('loading'); setpwdBtn.disabled=true;
+      try{
+        var res=await fetch(API+'/set-password',{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({token:tok,password:pwd})
+        });
+        var data=await res.json();
+        if(!res.ok) throw new Error(data.error||'Failed to set password.');
+        okEl.textContent='✓ '+data.message+' Redirecting to login...';
+        okEl.style.display='block';
+        setpwdBtn.style.display='none';
+        setTimeout(function(){
+          window.history.replaceState({},'',window.location.pathname);
+          document.getElementById('sp-password').value='';
+          document.getElementById('sp-confirm').value='';
+          showCard('login-card');
+          document.getElementById('usr').focus();
+        },2500);
+      }catch(e){
+        errEl.textContent='⚠ '+e.message;
+        errEl.style.display='block';
+        setpwdBtn.classList.remove('loading'); setpwdBtn.disabled=false;
+      }
+    });
+  }
+
+})();
+
+// FORGOT PASSWORD FLOW
+(function(){
+  var API='https://eis-recbackend.onrender.com/api/auth';
+  var ALL_CARDS=['login-card','signup-card','setpwd-card','forgot-card','resetpwd-card'];
+
+  function showCard(id){
+    ALL_CARDS.forEach(function(c){
+      var el=document.getElementById(c);
+      if(el) el.style.display=(c===id?'block':'none');
+    });
+  }
+
+  var showForgot=document.getElementById('show-forgot');
+  if(showForgot){
+    showForgot.addEventListener('click',function(){
+      showCard('forgot-card');
+      document.getElementById('fp-email').focus();
+    });
+  }
+
+  var forgotBack=document.getElementById('forgot-back-login');
+  if(forgotBack) forgotBack.addEventListener('click',function(){showCard('login-card');});
+
+  var forgotBtn=document.getElementById('forgot-btn');
+  if(forgotBtn){
+    forgotBtn.addEventListener('click',async function(){
+      var errEl=document.getElementById('forgot-err');
+      var okEl=document.getElementById('forgot-success');
+      errEl.style.display='none'; okEl.style.display='none';
+      var eml=document.getElementById('fp-email').value.trim();
+      if(!eml){errEl.textContent='Please enter your email address.';errEl.style.display='block';return;}
+      forgotBtn.classList.add('loading'); forgotBtn.disabled=true;
+      try{
+        var res=await fetch(API+'/forgot-password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:eml})});
+        var data=await res.json();
+        if(!res.ok) throw new Error(data.error||'Request failed.');
+        okEl.textContent='checkmark '+data.message;
+        okEl.style.display='block';
+        document.getElementById('fp-email').value='';
+      }catch(e){
+        errEl.textContent='warning '+e.message;
+        errEl.style.display='block';
+      }finally{
+        forgotBtn.classList.remove('loading'); forgotBtn.disabled=false;
+      }
+    });
+  }
+
+  (async function(){
+    var params=new URLSearchParams(window.location.search);
+    var token=params.get('reset');
+    if(!token) return;
+    showCard('resetpwd-card');
+    var errEl=document.getElementById('resetpwd-err');
+    var btn=document.getElementById('resetpwd-btn');
+    try{
+      var res=await fetch(API+'/verify-reset/'+token);
+      var data=await res.json();
+      if(!res.ok) throw new Error(data.error||'Invalid or expired link.');
+      document.getElementById('resetpwd-greeting').textContent='Hi '+data.name+'! Enter your new password below.';
+      document.getElementById('resetpwd-card').dataset.resetToken=token;
+    }catch(e){
+      errEl.textContent=e.message; errEl.style.display='block'; btn.disabled=true;
+    }
+  })();
+
+  var resetBtn=document.getElementById('resetpwd-btn');
+  if(resetBtn){
+    resetBtn.addEventListener('click',async function(){
+      var errEl=document.getElementById('resetpwd-err');
+      var okEl=document.getElementById('resetpwd-success');
+      errEl.style.display='none'; okEl.style.display='none';
+      var pwd=document.getElementById('rp-password').value;
+      var cpwd=document.getElementById('rp-confirm').value;
+      var tok=document.getElementById('resetpwd-card').dataset.resetToken;
+      if(!tok){errEl.textContent='Invalid session. Please use your reset email link.';errEl.style.display='block';return;}
+      if(pwd.length<8){errEl.textContent='Password must be at least 8 characters.';errEl.style.display='block';return;}
+      if(pwd!==cpwd){errEl.textContent='Passwords do not match.';errEl.style.display='block';return;}
+      resetBtn.classList.add('loading'); resetBtn.disabled=true;
+      try{
+        var res=await fetch(API+'/reset-password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:tok,password:pwd})});
+        var data=await res.json();
+        if(!res.ok) throw new Error(data.error||'Reset failed.');
+        okEl.textContent=data.message+' Redirecting to login...';
+        okEl.style.display='block';
+        resetBtn.style.display='none';
+        setTimeout(function(){
+          window.history.replaceState({},'',window.location.pathname);
+          document.getElementById('rp-password').value='';
+          document.getElementById('rp-confirm').value='';
+          showCard('login-card');
+          document.getElementById('usr').focus();
+        },2500);
+      }catch(e){
+        errEl.textContent=e.message; errEl.style.display='block';
+        resetBtn.classList.remove('loading'); resetBtn.disabled=false;
+      }
+    });
+  }
+})();
+
+// CONTACT ADMIN MODAL
+(function(){
+  var API='https://eis-recbackend.onrender.com/api/auth';
+  var modal=document.getElementById('contact-admin-modal');
+
+  function openModal(){modal.style.display='flex';document.getElementById('ca-username').focus();}
+  function closeModal(){
+    modal.style.display='none';
+    ['ca-username','ca-email','ca-message'].forEach(function(id){document.getElementById(id).value='';});
+    document.getElementById('contact-admin-err').style.display='none';
+    document.getElementById('contact-admin-ok').style.display='none';
+    var btn=document.getElementById('ca-send-btn');
+    btn.querySelector('.btn-text').style.display='';
+    var bl=btn.querySelector('.btn-loading');
+    bl.style.display='none';
+    btn.disabled=false;
+  }
+
+  var openTrigger=document.getElementById('open-contact-admin');
+  if(openTrigger) openTrigger.addEventListener('click',openModal);
+
+  var closeBtn=document.getElementById('close-contact-modal');
+  if(closeBtn) closeBtn.addEventListener('click',closeModal);
+
+  modal.addEventListener('click',function(e){if(e.target===modal) closeModal();});
+
+  var sendBtn=document.getElementById('ca-send-btn');
+  if(sendBtn){
+    sendBtn.addEventListener('click',async function(){
+      var errEl=document.getElementById('contact-admin-err');
+      var okEl=document.getElementById('contact-admin-ok');
+      errEl.style.display='none'; okEl.style.display='none';
+      var uname=document.getElementById('ca-username').value.trim();
+      var email=document.getElementById('ca-email').value.trim();
+      var msg=document.getElementById('ca-message').value.trim();
+      if(!uname||!email||!msg){errEl.textContent='Please fill in all fields.';errEl.style.display='block';return;}
+      var emailRe=/^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if(!emailRe.test(email)){errEl.textContent='Please enter a valid email address.';errEl.style.display='block';return;}
+      sendBtn.querySelector('.btn-text').style.display='none';
+      var bl=sendBtn.querySelector('.btn-loading');
+      bl.style.display='flex';
+      sendBtn.disabled=true;
+      try{
+        var res=await fetch(API+'/contact-admin',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:uname,email:email,message:msg})});
+        var data=await res.json();
+        if(!res.ok) throw new Error(data.error||'Send failed.');
+        okEl.textContent=data.message;
+        okEl.style.display='block';
+        ['ca-username','ca-email','ca-message'].forEach(function(id){document.getElementById(id).value='';});
+        setTimeout(closeModal,3000);
+      }catch(e){
+        errEl.textContent=e.message; errEl.style.display='block';
+        sendBtn.querySelector('.btn-text').style.display='';
+        bl.style.display='none';
+        sendBtn.disabled=false;
+      }
+    });
+  }
+})();
+</script>
